@@ -1,0 +1,238 @@
+/* =============================================================================
+   DISTO — Colors & Type
+   "Distortion taking a signal and pushing it past its limit — the result is
+   energy, attitude, and emotional impact."
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   FONTS
+   Season Sans is a commercial typeface. The team uses it as the single brand
+   voice (display + body). We substitute with Archivo (Google Fonts) — a
+   stable neo-grotesque with similar proportions, sturdy caps, and a strong
+   bold weight. Swap the @font-face below for real Season Sans when licensed.
+   ----------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* @font-face { font-family: 'Season Sans'; src: url('fonts/SeasonSans-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; } */
+/* @font-face { font-family: 'Season Sans'; src: url('fonts/SeasonSans-Bold.woff2')    format('woff2'); font-weight: 700; font-style: normal; } */
+
+:root {
+  /* ==========================================================================
+     COLOR — core palette (from the brand package)
+     ========================================================================== */
+
+  /* Primary — the signal */
+  --disto-red:          #F02D14;  /* PMS Bright Red C   — the one color that matters */
+  --disto-black:        #000000;  /* PMS Black 6 C      — the canvas */
+
+  /* Neutrals — "paper" family, warm off-whites → stone */
+  --disto-bone:         #EBE8E6;  /* lightest paper — default light bg */
+  --disto-stone:        #E1DCD2;  /* mid paper — surface-2 */
+  --disto-clay:         #BEB4A0;  /* warm stone — borders, dividers, muted text on light */
+
+  /* Accents — used sparingly, like flicks of a pedal dial */
+  --disto-yellow:       #F5E619;  /* high-vis caution yellow — callouts, highlights */
+  --disto-cyan:         #199BB9;  /* info / link / ice — the rare cool note */
+
+  /* ==========================================================================
+     SEMANTIC — light mode (paper-forward)
+     ========================================================================== */
+  --bg-1:               var(--disto-bone);    /* page */
+  --bg-2:               var(--disto-stone);   /* surface / card */
+  --bg-3:               #FFFFFF;              /* sheet / pop-over */
+  --bg-inverse:         var(--disto-black);
+
+  --fg-1:               var(--disto-black);   /* primary text */
+  --fg-2:               #2A2824;              /* body */
+  --fg-3:               #5E5A52;              /* secondary text */
+  --fg-muted:           var(--disto-clay);    /* hints, disabled */
+  --fg-inverse:         var(--disto-bone);
+
+  --accent:             var(--disto-red);     /* the one accent — use it once */
+  --accent-fg:          #FFFFFF;
+  --accent-hover:       #D62410;              /* -8% lightness */
+  --accent-press:       #B81E0C;
+
+  --link:               var(--disto-cyan);
+  --warning:            var(--disto-yellow);
+  --danger:             var(--disto-red);
+
+  --border-1:           rgba(0, 0, 0, 0.12);
+  --border-2:           rgba(0, 0, 0, 0.24);
+  --border-strong:      var(--disto-black);
+
+  /* ==========================================================================
+     TYPE — system
+     Season Sans is display + body. No serif, no second family. One voice.
+     ========================================================================== */
+  --font-sans:          'Archivo', 'Season Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display:       var(--font-sans);     /* same family, just bigger & tighter */
+
+  /* Scale — optical; display sizes tracked tight, body tracked normal */
+  --size-xs:            12px;
+  --size-sm:            14px;
+  --size-base:          16px;
+  --size-md:            18px;
+  --size-lg:            22px;
+  --size-xl:            28px;
+  --size-2xl:           36px;
+  --size-3xl:           48px;
+  --size-4xl:           64px;
+  --size-5xl:           88px;
+  --size-6xl:           120px;
+  --size-7xl:           180px;   /* hero / manifesto */
+
+  /* Weights — we mostly live at 400 and 700. 500 for UI, 900 for hero/poster. */
+  --wt-regular:         400;
+  --wt-medium:          500;
+  --wt-semi:            600;
+  --wt-bold:            700;
+  --wt-black:           900;
+
+  --lh-tight:           0.92;
+  --lh-snug:            1.08;
+  --lh-normal:          1.35;
+  --lh-relaxed:         1.55;
+
+  --tracking-tight:     -0.03em;   /* hero display */
+  --tracking-snug:      -0.015em;  /* headlines */
+  --tracking-normal:    0;
+  --tracking-wide:      0.08em;    /* eyebrow / caps labels */
+  --tracking-wider:     0.16em;    /* tiny all-caps */
+
+  /* ==========================================================================
+     SPACING — 4-pt base, no exotic steps
+     ========================================================================== */
+  --space-0:            0;
+  --space-1:            4px;
+  --space-2:            8px;
+  --space-3:            12px;
+  --space-4:            16px;
+  --space-5:            24px;
+  --space-6:            32px;
+  --space-7:            48px;
+  --space-8:            64px;
+  --space-9:            96px;
+  --space-10:           144px;
+
+  /* ==========================================================================
+     RADII — mostly square. Radius is a deliberate signal, not a default.
+     Think: hardware enclosure, guillotined paper edge.
+     ========================================================================== */
+  --radius-0:           0;        /* default — everything is square */
+  --radius-1:           2px;      /* inputs, pills */
+  --radius-2:           4px;      /* cards */
+  --radius-3:           8px;      /* raised cards, dialogs */
+  --radius-pill:        999px;    /* tag pills only */
+
+  /* ==========================================================================
+     ELEVATION — flat. Real shadows for real lifts (dialog, menu). That's it.
+     ========================================================================== */
+  --shadow-0:           none;
+  --shadow-1:           0 1px 0 rgba(0,0,0,.06);                              /* hairline */
+  --shadow-2:           0 2px 8px rgba(0,0,0,.08);                            /* card hover */
+  --shadow-3:           0 12px 32px -8px rgba(0,0,0,.18);                     /* menu */
+  --shadow-4:           0 32px 64px -16px rgba(0,0,0,.32);                    /* modal */
+
+  /* ==========================================================================
+     MOTION — fast, controlled. Nothing bouncy. Think pedal click, not spring.
+     ========================================================================== */
+  --dur-1:              80ms;
+  --dur-2:              140ms;
+  --dur-3:              240ms;
+  --dur-4:              420ms;
+  --ease-out:           cubic-bezier(0.2, 0.8, 0.2, 1);    /* default */
+  --ease-in:            cubic-bezier(0.6, 0, 0.8, 0.2);
+  --ease-in-out:        cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Content widths */
+  --content-narrow:     640px;
+  --content:            960px;
+  --content-wide:       1280px;
+}
+
+/* -----------------------------------------------------------------------------
+   DARK MODE — the native DISTO stance (the website in the brand deck is black)
+   ----------------------------------------------------------------------------- */
+:root.dark,
+[data-theme="dark"] {
+  --bg-1:               var(--disto-black);
+  --bg-2:               #0B0B0B;
+  --bg-3:               #141414;
+  --bg-inverse:         var(--disto-bone);
+
+  --fg-1:               var(--disto-bone);
+  --fg-2:               #D4D1CC;
+  --fg-3:               #9A958C;
+  --fg-muted:           #5E5A52;
+  --fg-inverse:         var(--disto-black);
+
+  --border-1:           rgba(235, 232, 230, 0.14);
+  --border-2:           rgba(235, 232, 230, 0.28);
+  --border-strong:      var(--disto-bone);
+
+  --shadow-2:           0 2px 8px rgba(0,0,0,.5);
+  --shadow-3:           0 12px 32px -8px rgba(0,0,0,.6);
+  --shadow-4:           0 32px 64px -16px rgba(0,0,0,.8);
+}
+
+/* =============================================================================
+   SEMANTIC TEXT STYLES — apply via class, no element restyling
+   ============================================================================= */
+
+/* Eyebrow — tiny all-caps, the "label" on the pedal */
+.disto-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--size-xs);
+  font-weight: var(--wt-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  line-height: var(--lh-normal);
+}
+
+/* Display — the manifesto voice. 'Cut Through.' */
+.disto-display {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, var(--size-7xl));
+  font-weight: var(--wt-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-tight);
+}
+
+.disto-h1 { font-family: var(--font-sans); font-size: var(--size-5xl); font-weight: var(--wt-bold);  letter-spacing: var(--tracking-tight); line-height: var(--lh-snug); }
+.disto-h2 { font-family: var(--font-sans); font-size: var(--size-4xl); font-weight: var(--wt-bold);  letter-spacing: var(--tracking-snug);  line-height: var(--lh-snug); }
+.disto-h3 { font-family: var(--font-sans); font-size: var(--size-3xl); font-weight: var(--wt-bold);  letter-spacing: var(--tracking-snug);  line-height: var(--lh-snug); }
+.disto-h4 { font-family: var(--font-sans); font-size: var(--size-2xl); font-weight: var(--wt-bold);  letter-spacing: var(--tracking-snug);  line-height: var(--lh-snug); }
+.disto-h5 { font-family: var(--font-sans); font-size: var(--size-xl);  font-weight: var(--wt-semi);  letter-spacing: var(--tracking-snug);  line-height: var(--lh-normal); }
+.disto-h6 { font-family: var(--font-sans); font-size: var(--size-lg);  font-weight: var(--wt-semi);  letter-spacing: var(--tracking-normal); line-height: var(--lh-normal); }
+
+.disto-body     { font-family: var(--font-sans); font-size: var(--size-base); font-weight: var(--wt-regular); line-height: var(--lh-relaxed); }
+.disto-body-lg  { font-family: var(--font-sans); font-size: var(--size-md);   font-weight: var(--wt-regular); line-height: var(--lh-relaxed); }
+.disto-body-sm  { font-family: var(--font-sans); font-size: var(--size-sm);   font-weight: var(--wt-regular); line-height: var(--lh-relaxed); }
+.disto-caption  { font-family: var(--font-sans); font-size: var(--size-xs);   font-weight: var(--wt-regular); line-height: var(--lh-normal); color: var(--fg-3); }
+.disto-mono     { font-family: var(--font-mono); font-size: var(--size-sm);   font-weight: var(--wt-regular); line-height: var(--lh-normal); }
+
+/* "Number plate" — the 01, 02, 03 on the pedal */
+.disto-numeral {
+  font-family: var(--font-sans);
+  font-size: var(--size-xl);
+  font-weight: var(--wt-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-snug);
+}
+
+/* =============================================================================
+   BASE
+   ============================================================================= */
+html, body {
+  background: var(--bg-1);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: var(--size-base);
+  line-height: var(--lh-relaxed);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--disto-red); color: #fff; }

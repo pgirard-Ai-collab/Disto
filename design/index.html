@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>betula × DISTO — Portail Brand Intelligence</title>
+<meta name="viewport" content="width=1440">
+<link rel="stylesheet" href="styles/tokens.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; font-family: 'Archivo', sans-serif; }
+  .dc-artboard-inner > div { box-sizing: border-box; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="screens/login.jsx"></script>
+<script type="text/babel" src="screens/clients.jsx"></script>
+<script type="text/babel" src="screens/import.jsx"></script>
+<script type="text/babel" src="screens/editor.jsx"></script>
+<script type="text/babel" src="screens/access.jsx"></script>
+<script type="text/babel" src="screens/dashboard.jsx"></script>
+<script type="text/babel" src="screens/strategy.jsx"></script>
+<script type="text/babel" src="screens/chat.jsx"></script>
+<script type="text/babel" src="screens/export.jsx"></script>
+
+<script type="text/babel">
+const W = 1440, H = 900;
+
+function App() {
+  return (
+    <DesignCanvas
+      projectTitle="betula × DISTO"
+      projectSubtitle="Portail Brand Intelligence · 08 écrans · SARTIGA v 1.3"
+    >
+      <DCSection
+        id="common"
+        title="Commune"
+        subtitle="Un seul point d'entrée, deux destins selon le rôle."
+      >
+        <DCArtboard id="login" label="00 · Connexion" width={W} height={H}>
+          <LoginScreen />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="agency"
+        title="Portail DISTO · Admin agence"
+        subtitle="La console de betula. Depuis ici, on ingère, structure, valide, publie."
+      >
+        <DCArtboard id="clients" label="2a · Liste des clients" width={W} height={H}>
+          <ClientsScreen />
+        </DCArtboard>
+        <DCArtboard id="import" label="2b · Import Disto" width={W} height={H}>
+          <ImportScreen />
+        </DCArtboard>
+        <DCArtboard id="editor" label="2c · Éditeur de structure" width={W} height={H}>
+          <EditorScreen />
+        </DCArtboard>
+        <DCArtboard id="access" label="2d · Gestion des accès" width={W} height={H}>
+          <AccessScreen />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="client"
+        title="Portail Client · Gardien de la marque"
+        subtitle="La face côté client — SARTIGA consulte, cherche, interroge, exporte. Lecture et dialogue, jamais plus."
+      >
+        <DCArtboard id="dashboard" label="3a · Dashboard marque" width={W} height={H}>
+          <DashboardScreen />
+        </DCArtboard>
+        <DCArtboard id="strategy" label="3b · Explorateur de stratégie" width={W} height={H}>
+          <StrategyScreen />
+        </DCArtboard>
+        <DCArtboard id="chat" label="3c · Interroger la marque" width={W} height={H}>
+          <ChatScreen />
+        </DCArtboard>
+        <DCArtboard id="export" label="3d · Export System Prompt" width={W} height={H}>
+          <ExportScreen />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

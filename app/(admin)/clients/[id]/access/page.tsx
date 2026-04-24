@@ -1,0 +1,142 @@
+import { C } from '@/lib/disto';
+import Sidebar from '@/components/layout/Sidebar';
+import TopBar from '@/components/layout/TopBar';
+import SectionHead from '@/components/ui/SectionHead';
+import Btn from '@/components/ui/Btn';
+import Pill from '@/components/ui/Pill';
+import Eyebrow from '@/components/ui/Eyebrow';
+import type { PillKind } from '@/lib/disto';
+
+const users = [
+  { name: 'Jean-Simon Auclair',  email: 'js@sartiga.co',        role: 'Admin',   status: 'active'   as PillKind, last: 'il y a 2 h' },
+  { name: 'Mireille Bouchard',   email: 'mireille@sartiga.co',  role: 'Admin',   status: 'active'   as PillKind, last: 'Hier' },
+  { name: 'Amélie Côté',         email: 'amelie@sartiga.co',    role: 'Lecteur', status: 'active'   as PillKind, last: 'il y a 3 j' },
+  { name: 'Philippe Ouellet',    email: 'p.ouellet@sartiga.co', role: 'Lecteur', status: 'invited'  as PillKind, last: 'Invité 2 mai' },
+  { name: 'Claude Trudel',       email: 'claude@agence-x.ca',   role: 'Lecteur', status: 'invited'  as PillKind, last: 'Invité 30 avr' },
+  { name: 'Florence Lavigne',    email: 'f.lavigne@sartiga.co', role: 'Admin',   status: 'disabled' as PillKind, last: 'il y a 1 mois' },
+];
+
+const statusLabel: Record<string, string> = { active: 'Actif', invited: 'Invité', disabled: 'Désactivé' };
+
+const stats = [
+  { n: '06', l: 'Utilisateurs totaux', accent: C.black },
+  { n: '03', l: 'Admins',              accent: C.red },
+  { n: '02', l: 'Invités en attente',  accent: C.cyan },
+  { n: '01', l: 'Désactivés',          accent: C.muted },
+];
+
+export default function AccessPage({ params }: { params: { id: string } }) {
+  return (
+    <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
+      <Sidebar variant="agency" clientId={params.id} />
+      <div className="portal-main">
+        <TopBar
+          theme="light"
+          crumbs={['betula', 'SARTIGA', 'Accès']}
+          right={
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Btn variant="ghost" size="sm">Exporter la liste</Btn>
+              <Btn variant="primary" size="sm">+  Inviter</Btn>
+            </div>
+          }
+        />
+
+        <div className="portal-scroll" style={{ padding: '36px 40px 40px' }}>
+          <SectionHead
+            num="04"
+            eyebrow="SARTIGA · Accès & permissions"
+            title="Qui peut lire, qui peut écrire."
+            subtitle="Un Admin modifie la structure et publie. Un Lecteur consulte le portail et interroge l'IA — jamais plus."
+          />
+
+          {/* Invite card */}
+          <div style={{
+            background: C.black, color: C.bone, padding: '28px 32px',
+            marginBottom: 32,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
+          }}>
+            <div>
+              <Eyebrow color={C.red} style={{ marginBottom: 8 }}>Nouvelle invitation</Eyebrow>
+              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>
+                Ajouter un gardien de marque.
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flex: 1, maxWidth: 720, marginLeft: 40 }}>
+              <div style={{ flex: 2 }}>
+                <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 6 }}>Courriel</Eyebrow>
+                <div style={{ borderBottom: `1.5px solid ${C.lineStrong}`, paddingBottom: 8, fontSize: 16, color: C.bone }}>
+                  prenom.nom@marque.co
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 6 }}>Rôle</Eyebrow>
+                <div style={{ display: 'flex', gap: 0, border: `1px solid ${C.line2}` }}>
+                  <div style={{ flex: 1, padding: '10px 0', textAlign: 'center', background: C.red, color: '#fff', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' }}>Admin</div>
+                  <div style={{ flex: 1, padding: '10px 0', textAlign: 'center', color: C.boneDim, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', borderLeft: `1px solid ${C.line2}` }}>Lecteur</div>
+                </div>
+              </div>
+              <Btn variant="primary" size="md">Envoyer  →</Btn>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid-4" style={{ gap: 0, border: `1px solid ${C.border1}`, background: '#FFFFFF', marginBottom: 32 }}>
+            {stats.map((k, i) => (
+              <div key={i} style={{ padding: '20px 24px', borderRight: i < stats.length - 1 ? `1px solid rgba(0,0,0,0.08)` : 'none' }}>
+                <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.02em', color: k.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{k.n}</div>
+                <div style={{ marginTop: 8, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>{k.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table header */}
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>Utilisateurs SARTIGA</div>
+            <div style={{ display: 'flex', gap: 18, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>
+              <span style={{ color: C.black, borderBottom: `2px solid ${C.red}`, paddingBottom: 4 }}>Tous</span>
+              <span>Admins</span>
+              <span>Lecteurs</span>
+              <span>Invités</span>
+            </div>
+          </div>
+
+          <div className="table-scroll">
+          <div style={{ background: '#FFFFFF', border: `1px solid ${C.border1}`, minWidth: 600 }}>
+            <div style={{
+              display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 80px',
+              padding: '14px 24px', borderBottom: `1px solid ${C.border1}`,
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted,
+            }}>
+              <span>Utilisateur</span><span>Courriel</span><span>Rôle</span><span>Statut</span><span>Activité</span>
+              <span style={{ textAlign: 'right' }}>—</span>
+            </div>
+            {users.map((u, i) => (
+              <div key={u.email} style={{
+                display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 80px',
+                padding: '16px 24px', alignItems: 'center',
+                borderBottom: i < users.length - 1 ? `1px solid rgba(0,0,0,0.08)` : 'none',
+                fontSize: 14,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 32, height: 32, background: i % 2 ? C.stone : C.clay, color: C.black,
+                    display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700,
+                  }}>
+                    {u.name.split(' ').map(p => p[0]).slice(0, 2).join('')}
+                  </div>
+                  <span style={{ fontWeight: 700 }}>{u.name}</span>
+                </div>
+                <span style={{ color: C.muted, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>{u.email}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: u.role === 'Admin' ? C.red : C.black }}>{u.role}</span>
+                <Pill kind={u.status}>{statusLabel[u.status]}</Pill>
+                <span style={{ color: C.muted, fontSize: 12 }}>{u.last}</span>
+                <span style={{ textAlign: 'right', color: C.muted, fontSize: 18 }}>⋯</span>
+              </div>
+            ))}
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
