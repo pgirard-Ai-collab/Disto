@@ -31,10 +31,11 @@ const statusDot: Record<SectionStatus, string> = {
 
 const toolbarItems = ['H1', 'H2', 'B', 'I', '•', '1.', '❝', '↔ Lien', '{ } Code'];
 
-export default function EditorPage({ params }: { params: { id: string } }) {
+export default async function EditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-      <Sidebar variant="agency" clientId={params.id} />
+      <Sidebar variant="agency" clientId={id} />
       <div className="portal-main">
         <TopBar
           theme="light"

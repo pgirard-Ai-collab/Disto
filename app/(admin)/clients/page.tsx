@@ -1,26 +1,22 @@
-import { C } from '@/lib/disto';
+import { C, STATUS_LABEL } from '@/lib/disto';
+import type { PillKind } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import SectionHead from '@/components/ui/SectionHead';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
 import Link from 'next/link';
-import type { PillKind } from '@/lib/disto';
 
 const clients = [
-  { id: 'sartiga',        name: 'SARTIGA',        brand: 'Centre de thermothérapie',   status: 'active'   as PillKind, sections: 13, total: 13, updated: '2 h',    owner: 'C. Bellefleur' },
-  { id: 'maison-herve',   name: 'Maison Hervé',   brand: 'Boulangerie artisanale',     status: 'active'   as PillKind, sections: 11, total: 13, updated: 'Hier',   owner: 'M. Lacroix' },
-  { id: 'aurore-lab',     name: 'Aurore Lab',     brand: 'Cosmétique minéral',         status: 'draft'    as PillKind, sections: 4,  total: 13, updated: '3 j',    owner: 'F. Trépanier' },
-  { id: 'boree-outdoor',  name: 'Borée Outdoor',  brand: 'Équipement plein-air',       status: 'active'   as PillKind, sections: 13, total: 13, updated: '5 j',    owner: 'C. Bellefleur' },
-  { id: 'studio-vertige', name: 'Studio Vertige', brand: 'Architecture d\'intérieur',  status: 'draft'    as PillKind, sections: 7,  total: 13, updated: '1 sem',  owner: 'F. Trépanier' },
-  { id: 'cable-co',       name: 'Câble & Co',     brand: 'Électroménager design',      status: 'archived' as PillKind, sections: 13, total: 13, updated: '1 mois', owner: 'M. Lacroix' },
-  { id: 'orme-fils',      name: 'Orme & Fils',    brand: 'Brasserie artisanale',       status: 'active'   as PillKind, sections: 13, total: 13, updated: '6 h',    owner: 'C. Bellefleur' },
-  { id: 'kiosque-bleu',   name: 'Kiosque Bleu',   brand: 'Café · torréfacteur',        status: 'archived' as PillKind, sections: 13, total: 13, updated: '2 mois', owner: 'M. Lacroix' },
-];
-
-const statusLabel: Record<string, string> = {
-  active: 'Actif', draft: 'Draft', archived: 'Archivé',
-};
+  { id: 'sartiga',        name: 'SARTIGA',        brand: 'Centre de thermothérapie',  status: 'active',   sections: 13, updated: '2 h',    owner: 'C. Bellefleur' },
+  { id: 'maison-herve',   name: 'Maison Hervé',   brand: 'Boulangerie artisanale',    status: 'active',   sections: 11, updated: 'Hier',   owner: 'M. Lacroix' },
+  { id: 'aurore-lab',     name: 'Aurore Lab',     brand: 'Cosmétique minéral',        status: 'draft',    sections: 4,  updated: '3 j',    owner: 'F. Trépanier' },
+  { id: 'boree-outdoor',  name: 'Borée Outdoor',  brand: 'Équipement plein-air',      status: 'active',   sections: 13, updated: '5 j',    owner: 'C. Bellefleur' },
+  { id: 'studio-vertige', name: 'Studio Vertige', brand: "Architecture d'intérieur",  status: 'draft',    sections: 7,  updated: '1 sem',  owner: 'F. Trépanier' },
+  { id: 'cable-co',       name: 'Câble & Co',     brand: 'Électroménager design',     status: 'archived', sections: 13, updated: '1 mois', owner: 'M. Lacroix' },
+  { id: 'orme-fils',      name: 'Orme & Fils',    brand: 'Brasserie artisanale',      status: 'active',   sections: 13, updated: '6 h',    owner: 'C. Bellefleur' },
+  { id: 'kiosque-bleu',   name: 'Kiosque Bleu',   brand: 'Café · torréfacteur',       status: 'archived', sections: 13, updated: '2 mois', owner: 'M. Lacroix' },
+] satisfies { id: string; name: string; brand: string; status: PillKind; sections: number; updated: string; owner: string }[];
 
 export default function ClientsPage() {
   return (
@@ -128,7 +124,7 @@ export default function ClientsPage() {
                     </span>
                     <span style={{ fontWeight: 700, letterSpacing: '-0.005em' }}>{c.name}</span>
                     <span style={{ color: C.muted }}>{c.brand}</span>
-                    <span><Pill kind={c.status}>{statusLabel[c.status]}</Pill></span>
+                    <span><Pill kind={c.status}>{STATUS_LABEL[c.status]}</Pill></span>
                     <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                       <span style={{ fontWeight: 700 }}>{c.sections}</span>
                       <span style={{ color: C.muted }}> / 13 sections</span>

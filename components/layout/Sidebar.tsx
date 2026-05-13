@@ -14,6 +14,13 @@ interface SidebarProps {
   clientId?: string;
 }
 
+interface SidebarContentProps {
+  variant: SidebarVariant;
+  brand: string;
+  items: { id: string; n: string; label: string; href: string }[];
+  isActive: (href: string) => boolean;
+}
+
 const agencyItems = (clientId?: string) => [
   { id: 'clients', n: '01', label: 'Clients',              href: '/clients' },
   { id: 'import',  n: '02', label: 'Import Disto',         href: clientId ? `/clients/${clientId}/import` : '/clients' },
@@ -28,27 +35,8 @@ const clientItems = (brand: string) => [
   { id: 'export',    n: '04', label: 'System Prompt',        href: `/${brand}/export` },
 ];
 
-export default function Sidebar({ variant = 'agency', brand, clientId }: SidebarProps) {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
-  const items = variant === 'agency'
-    ? agencyItems(clientId)
-    : clientItems(brand ?? 'brand');
-
-  const isActive = (href: string) =>
-    pathname === href || (href !== '/' && pathname.startsWith(href));
-
-  // Close sidebar when route changes
-  useEffect(() => { setOpen(false); }, [pathname]);
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
-  const sidebarContent = (
+function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps) {
+  return (
     <aside className="sidebar" style={{
       width: 256,
       background: C.black,
@@ -81,7 +69,7 @@ export default function Sidebar({ variant = 'agency', brand, clientId }: Sidebar
         </Eyebrow>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            {variant === 'agency' ? 'betula' : (brand ?? 'SARTIGA')}
+            {variant === 'agency' ? 'betula' : brand}
           </div>
           <span style={{ color: C.fg3, fontSize: 12 }}>⌄</span>
         </div>
@@ -150,6 +138,23 @@ export default function Sidebar({ variant = 'agency', brand, clientId }: Sidebar
       </div>
     </aside>
   );
+}
+
+export default function Sidebar({ variant = 'agency', brand, clientId }: SidebarProps) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  const resolvedBrand = brand ?? 'SARTIGA';
+  const items = variant === 'agency' ? agencyItems(clientId) : clientItems(resolvedBrand);
+  const isActive = (href: string) =>
+    pathname === href || (href !== '/' && pathname.startsWith(href));
+
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <>
@@ -176,7 +181,7 @@ export default function Sidebar({ variant = 'agency', brand, clientId }: Sidebar
           DISTO.
         </span>
         <span style={{ marginLeft: 'auto', fontSize: 13, color: C.fg3, fontWeight: 700 }}>
-          {variant === 'agency' ? 'betula' : (brand ?? 'SARTIGA')}
+          {variant === 'agency' ? 'betula' : resolvedBrand}
         </span>
       </div>
 
@@ -184,14 +189,14 @@ export default function Sidebar({ variant = 'agency', brand, clientId }: Sidebar
       <div style={{ position: 'relative' }}>
         <div
           className={`sidebar${open ? ' open' : ''}`}
-          style={{
-            width: 256,
-            height: '100%',
-            position: 'sticky',
-            top: 0,
-          }}
+          style={{ width: 256, height: '100%', position: 'sticky', top: 0 }}
         >
-          {sidebarContent}
+          <SidebarContent
+            variant={variant}
+            brand={resolvedBrand}
+            items={items}
+            isActive={isActive}
+          />
         </div>
       </div>
 

@@ -28,8 +28,9 @@ const cards = [
   },
 ];
 
-export default function DashboardPage({ params }: { params: { brand: string } }) {
-  const brand = params.brand.toUpperCase();
+export default async function DashboardPage({ params }: { params: Promise<{ brand: string }> }) {
+  const { brand: brandSlug } = await params;
+  const brand = brandSlug.toUpperCase();
 
   return (
     <div className="portal-layout" style={{ background: C.black, color: C.bone }}>
@@ -75,7 +76,7 @@ export default function DashboardPage({ params }: { params: { brand: string } })
 
           {/* Primary CTAs */}
           <div className="grid-2" style={{ gap: 0, marginBottom: 44, border: `1px solid ${C.line2}` }}>
-            <Link href={`/${params.brand}/chat`} style={{ textDecoration: 'none' }}>
+            <Link href={`/${brandSlug}/chat`} style={{ textDecoration: 'none' }}>
               <div style={{
                 padding: '32px 36px', background: C.red, color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, cursor: 'pointer',
@@ -88,7 +89,7 @@ export default function DashboardPage({ params }: { params: { brand: string } })
                 <div style={{ fontSize: 32 }}>→</div>
               </div>
             </Link>
-            <Link href={`/${params.brand}/export`} style={{ textDecoration: 'none' }}>
+            <Link href={`/${brandSlug}/export`} style={{ textDecoration: 'none' }}>
               <div style={{
                 padding: '32px 36px', background: C.panel,
                 borderLeft: `1px solid ${C.line2}`,

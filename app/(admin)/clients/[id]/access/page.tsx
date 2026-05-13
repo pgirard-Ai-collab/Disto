@@ -1,22 +1,20 @@
-import { C } from '@/lib/disto';
+import { C, STATUS_LABEL } from '@/lib/disto';
+import type { PillKind } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import SectionHead from '@/components/ui/SectionHead';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
 import Eyebrow from '@/components/ui/Eyebrow';
-import type { PillKind } from '@/lib/disto';
 
 const users = [
-  { name: 'Jean-Simon Auclair',  email: 'js@sartiga.co',        role: 'Admin',   status: 'active'   as PillKind, last: 'il y a 2 h' },
-  { name: 'Mireille Bouchard',   email: 'mireille@sartiga.co',  role: 'Admin',   status: 'active'   as PillKind, last: 'Hier' },
-  { name: 'Amélie Côté',         email: 'amelie@sartiga.co',    role: 'Lecteur', status: 'active'   as PillKind, last: 'il y a 3 j' },
-  { name: 'Philippe Ouellet',    email: 'p.ouellet@sartiga.co', role: 'Lecteur', status: 'invited'  as PillKind, last: 'Invité 2 mai' },
-  { name: 'Claude Trudel',       email: 'claude@agence-x.ca',   role: 'Lecteur', status: 'invited'  as PillKind, last: 'Invité 30 avr' },
-  { name: 'Florence Lavigne',    email: 'f.lavigne@sartiga.co', role: 'Admin',   status: 'disabled' as PillKind, last: 'il y a 1 mois' },
-];
-
-const statusLabel: Record<string, string> = { active: 'Actif', invited: 'Invité', disabled: 'Désactivé' };
+  { name: 'Jean-Simon Auclair',  email: 'js@sartiga.co',        role: 'Admin',   status: 'active',   last: 'il y a 2 h' },
+  { name: 'Mireille Bouchard',   email: 'mireille@sartiga.co',  role: 'Admin',   status: 'active',   last: 'Hier' },
+  { name: 'Amélie Côté',         email: 'amelie@sartiga.co',    role: 'Lecteur', status: 'active',   last: 'il y a 3 j' },
+  { name: 'Philippe Ouellet',    email: 'p.ouellet@sartiga.co', role: 'Lecteur', status: 'invited',  last: 'Invité 2 mai' },
+  { name: 'Claude Trudel',       email: 'claude@agence-x.ca',   role: 'Lecteur', status: 'invited',  last: 'Invité 30 avr' },
+  { name: 'Florence Lavigne',    email: 'f.lavigne@sartiga.co', role: 'Admin',   status: 'disabled', last: 'il y a 1 mois' },
+] satisfies { name: string; email: string; role: string; status: PillKind; last: string }[];
 
 const stats = [
   { n: '06', l: 'Utilisateurs totaux', accent: C.black },
@@ -25,10 +23,11 @@ const stats = [
   { n: '01', l: 'Désactivés',          accent: C.muted },
 ];
 
-export default function AccessPage({ params }: { params: { id: string } }) {
+export default async function AccessPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-      <Sidebar variant="agency" clientId={params.id} />
+      <Sidebar variant="agency" clientId={id} />
       <div className="portal-main">
         <TopBar
           theme="light"
@@ -128,7 +127,7 @@ export default function AccessPage({ params }: { params: { id: string } }) {
                 </div>
                 <span style={{ color: C.muted, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>{u.email}</span>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: u.role === 'Admin' ? C.red : C.black }}>{u.role}</span>
-                <Pill kind={u.status}>{statusLabel[u.status]}</Pill>
+                <Pill kind={u.status}>{STATUS_LABEL[u.status]}</Pill>
                 <span style={{ color: C.muted, fontSize: 12 }}>{u.last}</span>
                 <span style={{ textAlign: 'right', color: C.muted, fontSize: 18 }}>⋯</span>
               </div>

@@ -1,5 +1,3 @@
-'use client';
-
 import { C } from '@/lib/disto';
 import { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 
@@ -14,18 +12,26 @@ interface BtnProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   style?: CSSProperties;
 }
 
-const variantStyles = (variant: BtnVariant, onDark: boolean): CSSProperties => ({
-  primary:   { background: C.red,   color: '#fff',     borderColor: 'transparent' },
-  secondary: onDark
-    ? { background: C.bone,  color: C.black,  borderColor: 'transparent' }
-    : { background: C.black, color: C.bone,   borderColor: 'transparent' },
-  ghost: onDark
-    ? { background: 'transparent', borderColor: C.lineStrong, color: C.bone }
-    : { background: 'transparent', borderColor: C.black,      color: C.black },
-  ghostDim: onDark
-    ? { background: 'transparent', borderColor: C.line2, color: C.boneDim }
-    : { background: 'transparent', borderColor: 'rgba(0,0,0,0.24)', color: C.muted },
-}[variant]);
+const VARIANT_STYLES = {
+  primary:     { base: { background: C.red,   color: '#fff',    borderColor: 'transparent' } },
+  secondary:   {
+    base:  { background: C.black, color: C.bone,  borderColor: 'transparent' },
+    onDark:{ background: C.bone,  color: C.black, borderColor: 'transparent' },
+  },
+  ghost:       {
+    base:  { background: 'transparent', borderColor: C.black,       color: C.black },
+    onDark:{ background: 'transparent', borderColor: C.lineStrong,   color: C.bone  },
+  },
+  ghostDim:    {
+    base:  { background: 'transparent', borderColor: 'rgba(0,0,0,0.24)', color: C.muted   },
+    onDark:{ background: 'transparent', borderColor: C.line2,            color: C.boneDim },
+  },
+} satisfies Record<BtnVariant, { base: CSSProperties; onDark?: CSSProperties }>;
+
+function resolveVariant(variant: BtnVariant, onDark: boolean): CSSProperties {
+  const v = VARIANT_STYLES[variant];
+  return onDark && 'onDark' in v ? v.onDark! : v.base;
+}
 
 export default function Btn({
   variant = 'primary',
@@ -52,7 +58,7 @@ export default function Btn({
         fontSize: size === 'sm' ? 12 : 13,
         borderRadius: 0,
         transition: 'all 140ms cubic-bezier(0.2,0.8,0.2,1)',
-        ...variantStyles(variant, onDark),
+        ...resolveVariant(variant, onDark),
         ...style,
       }}
     >

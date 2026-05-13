@@ -3,9 +3,38 @@
 import { C } from '@/lib/disto';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Btn from '@/components/ui/Btn';
-import Link from 'next/link';
+import { useState, FormEvent } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push('/clients');
+  }
+
   return (
     <div
       className="login-layout"
@@ -88,7 +117,7 @@ export default function LoginPage() {
           justifyContent: 'center',
         }}
       >
-        <div style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}>
           <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>02 / Connexion</Eyebrow>
           <div style={{
             fontSize: 40,
@@ -108,7 +137,11 @@ export default function LoginPage() {
             <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>Courriel</Eyebrow>
             <input
               type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               placeholder="prenom.nom@agence.co"
+              autoComplete="email"
               style={{
                 display: 'block',
                 width: '100%',
@@ -133,23 +166,30 @@ export default function LoginPage() {
               marginBottom: 10,
             }}>
               <Eyebrow color={C.fg3} style={{ fontSize: 10 }}>Mot de passe</Eyebrow>
-              <a
-                href="#"
+              <button
+                type="button"
                 style={{
+                  background: 'none',
+                  border: 'none',
                   color: C.cyan,
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
                 }}
               >
                 Oublié ?
-              </a>
+              </button>
             </div>
             <input
               type="password"
+              required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               placeholder="••••••••••"
+              autoComplete="current-password"
               style={{
                 display: 'block',
                 width: '100%',
@@ -166,14 +206,29 @@ export default function LoginPage() {
             />
           </div>
 
-          <Link href="/clients" style={{ display: 'block', textDecoration: 'none' }}>
-            <Btn
-              variant="primary"
-              style={{ width: '100%', justifyContent: 'center', padding: '16px 22px', fontSize: 13 }}
-            >
-              Se connecter  →
-            </Btn>
-          </Link>
+          {error && (
+            <div style={{
+              marginBottom: 16,
+              padding: '10px 14px',
+              background: 'rgba(240,45,20,0.12)',
+              border: `1px solid ${C.red}`,
+              color: C.red,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+            }}>
+              {error}
+            </div>
+          )}
+
+          <Btn
+            type="submit"
+            variant="primary"
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '16px 22px', fontSize: 13 }}
+          >
+            {loading ? 'Connexion…' : 'Se connecter  →'}
+          </Btn>
 
           <div style={{
             marginTop: 28,
@@ -186,19 +241,22 @@ export default function LoginPage() {
             color: C.fg3,
           }}>
             <span>Pas encore de compte ?</span>
-            <a
-              href="#"
+            <button
+              type="button"
               style={{
+                background: 'none',
+                border: 'none',
                 color: C.bone,
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 fontSize: 11,
-                textDecoration: 'none',
+                cursor: 'pointer',
+                padding: 0,
               }}
             >
               Demander un accès →
-            </a>
+            </button>
           </div>
 
           <div style={{
@@ -215,7 +273,7 @@ export default function LoginPage() {
             <span>·</span>
             <span>SSO · Microsoft</span>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

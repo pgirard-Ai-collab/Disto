@@ -29,10 +29,11 @@ const sections = [
   { n: '13', name: 'Contexte concurrentiel',   preview: '4 acteurs cartographiés — positionnement différenciant sur le silence et la durée.' },
 ];
 
-export default function ImportPage({ params }: { params: { id: string } }) {
+export default async function ImportPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-      <Sidebar variant="agency" clientId={params.id} />
+      <Sidebar variant="agency" clientId={id} />
       <div className="portal-main">
         <TopBar
           theme="light"

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
-export default function ClientDetailPage({ params }: { params: { id: string } }) {
-  redirect(`/clients/${params.id}/import`);
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  redirect(`/clients/${id}/import`);
 }

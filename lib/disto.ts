@@ -3,7 +3,6 @@ export const C = {
   black:      '#000000',
   ink:        '#0B0B0B',
   panel:      '#141414',
-  panel2:     '#1B1B1B',
   line:       'rgba(235,232,230,0.14)',
   line2:      'rgba(235,232,230,0.28)',
   lineStrong: 'rgba(235,232,230,0.55)',
@@ -36,4 +35,12 @@ export const PILL_MAP: Record<PillKind, { bg: string; fg: string; dot: string }>
   invited:   { bg: 'rgba(25,155,185,0.14)',  fg: C.cyan,      dot: C.cyan },
   disabled:  { bg: 'rgba(154,149,140,0.14)', fg: C.fg3,       dot: C.fg3 },
   default:   { bg: 'rgba(0,0,0,0.05)',       fg: C.muted,     dot: C.muted },
+};
+
+export const STATUS_LABEL: Record<string, string> = {
+  active:   'Actif',
+  invited:  'Invité',
+  disabled: 'Désactivé',
+  draft:    'Brouillon',
+  archived: 'Archivé',
 };

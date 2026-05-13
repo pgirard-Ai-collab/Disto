@@ -32,8 +32,9 @@ const meta = [
   { k: 'Liens',        v: 'Positionnement · Mission' },
 ];
 
-export default function StrategyPage({ params }: { params: { brand: string } }) {
-  const brand = params.brand.toUpperCase();
+export default async function StrategyPage({ params }: { params: Promise<{ brand: string }> }) {
+  const { brand: brandSlug } = await params;
+  const brand = brandSlug.toUpperCase();
 
   return (
     <div className="portal-layout" style={{ background: C.black, color: C.bone }}>
