@@ -1,6 +1,7 @@
 import { C } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
+import UserMenu from '@/components/layout/UserMenu';
 import SectionHead from '@/components/ui/SectionHead';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
@@ -39,9 +40,10 @@ export default async function ImportPage({ params }: { params: Promise<{ id: str
           theme="light"
           crumbs={['betula', 'Clients', 'SARTIGA', 'Import Disto']}
           right={
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Btn variant="ghost" size="sm">Annuler</Btn>
               <Btn variant="primary" size="sm">Valider la structure  →</Btn>
+              <UserMenu theme="light" />
             </div>
           }
         />

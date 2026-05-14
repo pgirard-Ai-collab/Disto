@@ -2,6 +2,7 @@ import { C, STATUS_LABEL } from '@/lib/disto';
 import type { PillKind } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
+import UserMenu from '@/components/layout/UserMenu';
 import SectionHead from '@/components/ui/SectionHead';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
@@ -26,17 +27,7 @@ export default function ClientsPage() {
         <TopBar
           theme="light"
           crumbs={['betula', 'Console', 'Clients']}
-          right={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>
-                Claire Bellefleur — Admin
-              </span>
-              <div style={{
-                width: 34, height: 34, background: C.black, color: C.bone,
-                display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700,
-              }}>CB</div>
-            </div>
-          }
+          right={<UserMenu theme="light" />}
         />
 
         <div className="portal-scroll" style={{ padding: '36px 40px 28px' }}>

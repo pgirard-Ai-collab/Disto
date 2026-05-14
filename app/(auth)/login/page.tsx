@@ -3,9 +3,11 @@
 import { C } from '@/lib/disto';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Btn from '@/components/ui/Btn';
+import AuthBrandPanel from '@/components/layout/AuthBrandPanel';
 import { useState, FormEvent } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,20 +21,43 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
-
+    const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {
-      setError(authError.message);
+      const msg = authError.message.toLowerCase();
+      if (msg.includes('invalid') || msg.includes('credentials')) {
+        setError('Courriel ou mot de passe incorrect.');
+      } else if (msg.includes('banned') || msg.includes('disabled')) {
+        setError('Ce compte a été désactivé. Contactez votre administrateur.');
+      } else {
+        setError('Une erreur est survenue. Veuillez réessayer.');
+      }
       setLoading(false);
       return;
     }
 
-    router.push('/clients');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError('Une erreur est survenue. Veuillez réessayer.');
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, brand_slug')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role === 'agency_admin') {
+      router.push('/clients');
+    } else if (profile?.brand_slug) {
+      router.push(`/${profile.brand_slug}`);
+    } else {
+      setError('Aucun portail associé à ce compte. Contactez votre administrateur.');
+      setLoading(false);
+    }
   }
 
   return (
@@ -40,70 +65,12 @@ export default function LoginPage() {
       className="login-layout"
       style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif' }}
     >
-      {/* LEFT — brand panel */}
-      <div
-        className="login-brand-panel"
-        style={{
-        flex: '1.1',
-        borderRight: `1px solid ${C.line}`,
-        padding: '40px 56px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Red signal line */}
-        <div style={{
-          position: 'absolute',
-          top: 40,
-          right: -80,
-          width: 260,
-          height: 1,
-          background: C.red,
-        }} />
-
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-          <span style={{ color: C.red, fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em' }}>
-            DISTO.
-          </span>
-          <Eyebrow color={C.fg3} style={{ fontSize: 11 }}>Brand OS</Eyebrow>
-        </div>
-
-        {/* Hero */}
-        <div>
-          <Eyebrow color={C.red} style={{ marginBottom: 28 }}>01 / Signal clair</Eyebrow>
-          <div className="login-brand-hero" style={{
-            fontSize: 'clamp(40px, 6vw, 88px)',
-            fontWeight: 700,
-            letterSpacing: '-0.03em',
-            lineHeight: 0.92,
-            marginBottom: 28,
-          }}>
-            Une seule vérité<br />
-            <span style={{ color: C.fg3 }}>de marque.</span>
-          </div>
-          <div style={{ fontSize: 16, lineHeight: 1.55, maxWidth: 460, color: C.boneDim }}>
-            Le portail betula centralise la stratégie, le ton et le prompt système de chaque marque — pour que chaque production reste fidèle au signal.
-          </div>
-        </div>
-
-        {/* Footer meta */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: C.muted,
-        }}>
-          <span>betula × disto</span>
-          <span>— Édition 2026 —</span>
-          <span>Québec / MTL</span>
-        </div>
-      </div>
+      <AuthBrandPanel
+        eyebrow="01 / Signal clair"
+        heroLine1="Une seule vérité"
+        heroLine2="de marque."
+        tagline="Le portail betula centralise la stratégie, le ton et le prompt système de chaque marque — pour que chaque production reste fidèle au signal."
+      />
 
       {/* RIGHT — form panel */}
       <div
@@ -166,22 +133,19 @@ export default function LoginPage() {
               marginBottom: 10,
             }}>
               <Eyebrow color={C.fg3} style={{ fontSize: 10 }}>Mot de passe</Eyebrow>
-              <button
-                type="button"
+              <Link
+                href="/forgot-password"
                 style={{
-                  background: 'none',
-                  border: 'none',
                   color: C.cyan,
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  cursor: 'pointer',
-                  padding: 0,
+                  textDecoration: 'none',
                 }}
               >
                 Oublié ?
-              </button>
+              </Link>
             </div>
             <input
               type="password"

@@ -1,6 +1,7 @@
 import { C } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
+import UserMenu from '@/components/layout/UserMenu';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
 import Eyebrow from '@/components/ui/Eyebrow';
@@ -47,6 +48,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
               </span>
               <Btn variant="ghost" size="sm">Sauvegarder</Btn>
               <Btn variant="primary" size="sm">Publier  →</Btn>
+              <UserMenu theme="light" />
             </div>
           }
         />
