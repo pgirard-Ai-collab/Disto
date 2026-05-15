@@ -8,7 +8,7 @@ import { inviteUser } from '@/app/actions/invite-user';
 
 type Role = 'client_admin' | 'client_reader';
 
-export default function InviteForm({ brandSlug }: { brandSlug: string }) {
+export default function InviteForm({ clientId }: { clientId: string }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('client_admin');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -19,7 +19,7 @@ export default function InviteForm({ brandSlug }: { brandSlug: string }) {
     setStatus('loading');
     setMessage(null);
 
-    const result = await inviteUser(email, role, brandSlug);
+    const result = await inviteUser(email, role, clientId);
 
     if (result.success) {
       setStatus('success');

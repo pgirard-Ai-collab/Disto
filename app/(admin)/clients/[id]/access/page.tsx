@@ -1,61 +1,97 @@
+import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
 import { C, STATUS_LABEL } from '@/lib/disto';
 import type { PillKind } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
 import SectionHead from '@/components/ui/SectionHead';
-import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
-import Eyebrow from '@/components/ui/Eyebrow';
 import InviteForm from './InviteForm';
 import DisableUserBtn from './DisableUserBtn';
 
-const users = [
-  { id: 'u1', name: 'Jean-Simon Auclair',  email: 'js@sartiga.co',        role: 'Admin',   status: 'active',   last: 'il y a 2 h' },
-  { id: 'u2', name: 'Mireille Bouchard',   email: 'mireille@sartiga.co',  role: 'Admin',   status: 'active',   last: 'Hier' },
-  { id: 'u3', name: 'Amélie Côté',         email: 'amelie@sartiga.co',    role: 'Lecteur', status: 'active',   last: 'il y a 3 j' },
-  { id: 'u4', name: 'Philippe Ouellet',    email: 'p.ouellet@sartiga.co', role: 'Lecteur', status: 'invited',  last: 'Invité 2 mai' },
-  { id: 'u5', name: 'Claude Trudel',       email: 'claude@agence-x.ca',   role: 'Lecteur', status: 'invited',  last: 'Invité 30 avr' },
-  { id: 'u6', name: 'Florence Lavigne',    email: 'f.lavigne@sartiga.co', role: 'Admin',   status: 'disabled', last: 'il y a 1 mois' },
-] satisfies { id: string; name: string; email: string; role: string; status: PillKind; last: string }[];
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
-const stats = [
-  { n: '06', l: 'Utilisateurs totaux', accent: C.black },
-  { n: '03', l: 'Admins',              accent: C.red },
-  { n: '02', l: 'Invités en attente',  accent: C.cyan },
-  { n: '01', l: 'Désactivés',          accent: C.muted },
-];
+const STATUS_TO_PILL: Record<'invited' | 'active' | 'disabled', PillKind> = {
+  invited: 'invited',
+  active: 'active',
+  disabled: 'disabled',
+};
 
 export default async function AccessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const supabase = await createClient();
+
+  const { data: client, error: clientErr } = await supabase
+    .from('clients')
+    .select('id, brand_name')
+    .eq('id', id)
+    .single();
+
+  if (clientErr || !client) notFound();
+
+  const { data: clientUsers } = await supabase
+    .from('client_users')
+    .select('id, user_id, role, status, invited_at')
+    .eq('client_id', id)
+    .order('invited_at', { ascending: false });
+
+  // Batch fetch all user emails in one shot (avoids N+1)
+  type UserRow = {
+    id: string;
+    user_id: string;
+    email: string;
+    role: string;
+    status: 'invited' | 'active' | 'disabled';
+    invited_at: string;
+  };
+
+  const users: UserRow[] = [];
+  if (clientUsers && clientUsers.length > 0) {
+    const admin = await createAdminClient();
+    const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const emailById = new Map(authUsers.map(u => [u.id, u.email ?? '']));
+    for (const cu of clientUsers) {
+      users.push({
+        id: cu.id,
+        user_id: cu.user_id,
+        email: emailById.get(cu.user_id) ?? cu.user_id,
+        role: cu.role === 'admin' ? 'Admin' : 'Lecteur',
+        status: cu.status as 'invited' | 'active' | 'disabled',
+        invited_at: cu.invited_at,
+      });
+    }
+  }
+
+  const stats = [
+    { n: String(users.length).padStart(2, '0'),                                       l: 'Utilisateurs totaux',  accent: C.black },
+    { n: String(users.filter(u => u.role === 'Admin').length).padStart(2, '0'),       l: 'Admins',               accent: C.red },
+    { n: String(users.filter(u => u.status === 'invited').length).padStart(2, '0'),   l: 'Invités en attente',   accent: C.cyan },
+    { n: String(users.filter(u => u.status === 'disabled').length).padStart(2, '0'),  l: 'Désactivés',           accent: C.muted },
+  ];
+
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
       <Sidebar variant="agency" clientId={id} />
       <div className="portal-main">
         <TopBar
           theme="light"
-          crumbs={['betula', 'SARTIGA', 'Accès']}
-          right={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Btn variant="ghost" size="sm">Exporter la liste</Btn>
-              <UserMenu theme="light" />
-            </div>
-          }
+          crumbs={['betula', client.brand_name, 'Accès']}
+          right={<UserMenu theme="light" />}
         />
-
         <div className="portal-scroll" style={{ padding: '36px 40px 40px' }}>
           <SectionHead
             num="04"
-            eyebrow="SARTIGA · Accès & permissions"
+            eyebrow={`${client.brand_name} · Accès & permissions`}
             title="Qui peut lire, qui peut écrire."
             subtitle="Un Admin modifie la structure et publie. Un Lecteur consulte le portail et interroge l'IA — jamais plus."
           />
 
-          {/* Invite form */}
-          <InviteForm brandSlug={id} />
+          <InviteForm clientId={id} />
 
-          {/* Stats */}
-          <div className="grid-4" style={{ gap: 0, border: `1px solid ${C.border1}`, background: '#FFFFFF', marginBottom: 32 }}>
+          <div className="grid-4" style={{ gap: 0, border: `1px solid ${C.border1}`, background: C.white, marginBottom: 32 }}>
             {stats.map((k, i) => (
               <div key={i} style={{ padding: '20px 24px', borderRight: i < stats.length - 1 ? `1px solid rgba(0,0,0,0.08)` : 'none' }}>
                 <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.02em', color: k.accent, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{k.n}</div>
@@ -64,56 +100,53 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
             ))}
           </div>
 
-          {/* Table header */}
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>Utilisateurs SARTIGA</div>
-            <div style={{ display: 'flex', gap: 18, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>
-              <span style={{ color: C.black, borderBottom: `2px solid ${C.red}`, paddingBottom: 4 }}>Tous</span>
-              <span>Admins</span>
-              <span>Lecteurs</span>
-              <span>Invités</span>
-            </div>
+          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em', marginBottom: 14 }}>
+            Utilisateurs {client.brand_name}
           </div>
 
-          <div className="table-scroll">
-            <div style={{ background: '#FFFFFF', border: `1px solid ${C.border1}`, minWidth: 600 }}>
-              <div style={{
-                display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 80px',
-                padding: '14px 24px', borderBottom: `1px solid ${C.border1}`,
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted,
-              }}>
-                <span>Utilisateur</span><span>Courriel</span><span>Rôle</span><span>Statut</span><span>Activité</span>
-                <span style={{ textAlign: 'right' }}>—</span>
-              </div>
-              {users.map((u, i) => (
-                <div key={u.email} style={{
-                  display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 80px',
-                  padding: '16px 24px', alignItems: 'center',
-                  borderBottom: i < users.length - 1 ? `1px solid rgba(0,0,0,0.08)` : 'none',
-                  fontSize: 14,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                      width: 32, height: 32, background: i % 2 ? C.stone : C.clay, color: C.black,
-                      display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700,
-                    }}>
-                      {u.name.split(' ').map(p => p[0]).slice(0, 2).join('')}
-                    </div>
-                    <span style={{ fontWeight: 700 }}>{u.name}</span>
-                  </div>
-                  <span style={{ color: C.muted, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>{u.email}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: u.role === 'Admin' ? C.red : C.black }}>{u.role}</span>
-                  <Pill kind={u.status}>{STATUS_LABEL[u.status]}</Pill>
-                  <span style={{ color: C.muted, fontSize: 12 }}>{u.last}</span>
-                  <span style={{ textAlign: 'right' }}>
-                    {u.status !== 'disabled' && (
-                      <DisableUserBtn userId={u.id} userName={u.name} />
-                    )}
-                  </span>
-                </div>
-              ))}
+          {users.length === 0 ? (
+            <div style={{ padding: '32px 20px', background: C.white, border: `1px solid ${C.border1}`, textAlign: 'center', color: C.muted, fontSize: 14 }}>
+              Aucun utilisateur invité pour l&apos;instant.
             </div>
-          </div>
+          ) : (
+            <div className="table-scroll">
+              <div style={{ background: C.white, border: `1px solid ${C.border1}`, minWidth: 560 }}>
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '2.5fr 1fr 1fr 1.2fr 80px',
+                  padding: '14px 24px', borderBottom: `1px solid ${C.border1}`,
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted,
+                }}>
+                  <span>Courriel</span><span>Rôle</span><span>Statut</span><span>Invité le</span><span style={{ textAlign: 'right' }}>—</span>
+                </div>
+                {users.map((u, i) => {
+                  const pillKind = STATUS_TO_PILL[u.status];
+                  return (
+                    <div key={u.id} style={{
+                      display: 'grid', gridTemplateColumns: '2.5fr 1fr 1fr 1.2fr 80px',
+                      padding: '16px 24px', alignItems: 'center',
+                      borderBottom: i < users.length - 1 ? `1px solid rgba(0,0,0,0.08)` : 'none',
+                      fontSize: 14,
+                      opacity: u.status === 'disabled' ? 0.5 : 1,
+                    }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: C.muted }}>{u.email}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: u.role === 'Admin' ? C.red : C.black }}>{u.role}</span>
+                      <Pill kind={pillKind}>{STATUS_LABEL[u.status] ?? u.status}</Pill>
+                      <span style={{ color: C.muted, fontSize: 12 }}>{formatDate(u.invited_at)}</span>
+                      <span style={{ textAlign: 'right' }}>
+                        <DisableUserBtn
+                          clientUserId={u.id}
+                          userId={u.user_id}
+                          userName={u.email}
+                          status={u.status}
+                          clientId={id}
+                        />
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

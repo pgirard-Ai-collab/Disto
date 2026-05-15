@@ -9,9 +9,9 @@ export type InviteUserResult =
 export async function inviteUser(
   email: string,
   role: 'client_admin' | 'client_reader',
-  brandSlug: string,
+  clientId: string,
 ): Promise<InviteUserResult> {
-  if (!email || !role || !brandSlug) {
+  if (!email || !role || !clientId) {
     return { success: false, error: 'Tous les champs sont requis.' };
   }
 
@@ -26,11 +26,16 @@ export async function inviteUser(
     .single();
   if (callerProfile?.role !== 'agency_admin') return { success: false, error: 'Accès refusé.' };
 
+  // Resolve client to get slug
   const admin = await createAdminClient();
+  const { data: client } = await admin.from('clients').select('id, slug').eq('id', clientId).single();
+  if (!client) return { success: false, error: 'Client introuvable.' };
+
+  const brandRole = role === 'client_admin' ? 'client_admin' : 'client_reader';
+  const clientRole = role === 'client_admin' ? 'admin' : 'reader';
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
-  const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo,
-  });
+
+  const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
 
   if (inviteError) {
     if (inviteError.message.includes('already registered')) {
@@ -39,14 +44,24 @@ export async function inviteUser(
     return { success: false, error: "Impossible d'envoyer l'invitation. Veuillez réessayer." };
   }
 
+  // Create profile
   const { error: profileError } = await admin
     .from('profiles')
-    .insert({ id: data.user.id, role, brand_slug: brandSlug });
+    .upsert({ id: data.user.id, role: brandRole, brand_slug: client.slug });
 
   if (profileError) {
-    // Rollback: remove the auth user to avoid orphaned accounts
     await admin.auth.admin.deleteUser(data.user.id);
     return { success: false, error: 'Erreur lors de la création du profil. Veuillez réessayer.' };
+  }
+
+  // Create client_users row
+  const { error: cuError } = await admin
+    .from('client_users')
+    .upsert({ client_id: clientId, user_id: data.user.id, role: clientRole, status: 'invited' });
+
+  if (cuError) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    return { success: false, error: 'Erreur lors de la création de l\'accès. Veuillez réessayer.' };
   }
 
   return { success: true };

@@ -1,6 +1,7 @@
 /* DISTO design system constants — single source of truth for colors */
 export const C = {
   black:      '#000000',
+  white:      '#FFFFFF',
   ink:        '#0B0B0B',
   panel:      '#141414',
   line:       'rgba(235,232,230,0.14)',
@@ -13,6 +14,7 @@ export const C = {
   red:        '#F02D14',
   redHover:   '#D62410',
   yellow:     '#F5E619',
+  yellowDark: '#B8A800',
   cyan:       '#199BB9',
   clay:       '#BEB4A0',
   stone:      '#E1DCD2',

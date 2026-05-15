@@ -18,15 +18,35 @@ export default function SetPasswordPage() {
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    // getUser() validates the token server-side (unlike getSession which reads from local cache)
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+    let invalidTimer: ReturnType<typeof setTimeout>;
+
+    // Check for error in hash before subscribing (e.g. otp_expired from Supabase redirect)
+    const hash = window.location.hash;
+    if (hash.includes('error=')) {
+      const params = new URLSearchParams(hash.slice(1));
+      const code = params.get('error_code') ?? params.get('error');
+      if (code === 'otp_expired' || code === 'access_denied') {
+        setError('Lien expiré. Cliquez sur « Renvoyer » dans la liste des utilisateurs pour obtenir un nouveau lien.');
+        return;
+      }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        clearTimeout(invalidTimer);
         setSessionReady(true);
-      } else {
-        setError('Lien invalide ou expiré. Demandez une nouvelle invitation.');
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        invalidTimer = setTimeout(() => {
+          setError('Lien invalide ou expiré. Demandez une nouvelle invitation.');
+        }, 2000);
       }
     });
+
+    return () => {
+      clearTimeout(invalidTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -56,6 +76,8 @@ export default function SetPasswordPage() {
     if (profile?.role === 'agency_admin') {
       router.push('/clients');
     } else if (profile?.brand_slug) {
+      // Activate client_users row from 'invited' to 'active' on first password set
+      await supabase.rpc('activate_my_client_access');
       router.push(`/${profile.brand_slug}`);
     } else {
       router.push('/login');
