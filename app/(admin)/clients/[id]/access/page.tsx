@@ -7,6 +7,7 @@ import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
 import SectionHead from '@/components/ui/SectionHead';
 import Pill from '@/components/ui/Pill';
+import { hasPublishedStructure } from '@/lib/has-published';
 import InviteForm from './InviteForm';
 import DisableUserBtn from './DisableUserBtn';
 
@@ -65,6 +66,8 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
     }
   }
 
+  const hasPublished = await hasPublishedStructure(id);
+
   const stats = [
     { n: String(users.length).padStart(2, '0'),                                       l: 'Utilisateurs totaux',  accent: C.black },
     { n: String(users.filter(u => u.role === 'Admin').length).padStart(2, '0'),       l: 'Admins',               accent: C.red },
@@ -74,7 +77,7 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-      <Sidebar variant="agency" clientId={id} />
+      <Sidebar variant="agency" clientId={id} hasPublishedVersion={hasPublished} />
       <div className="portal-main">
         <TopBar
           theme="light"

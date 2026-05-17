@@ -4,55 +4,74 @@ import TopBar from '@/components/layout/TopBar';
 import Pill from '@/components/ui/Pill';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
+import { requireBrandAccess } from '@/lib/client-access';
 
-const cards = [
-  {
-    n: '01', label: 'Mission', tag: 'Validée' as const,
-    title: 'Ralentir, le temps d\'un rituel.',
-    body: 'Offrir une expérience de thermothérapie fondée sur le silence, la chaleur et la forêt — à quatre heures du monde.',
-  },
-  {
-    n: '02', label: 'Archétype', tag: 'Validée' as const,
-    title: 'Le Sage.',
-    body: 'Calme, patient, enraciné. Parle peu, tient longtemps. La chaleur comme professeure.',
-  },
-  {
-    n: '03', label: 'Ton', tag: 'Modifié' as const,
-    title: 'Posé, sensoriel, économe.',
-    body: 'Phrases courtes. Métaphores d\'éléments — pierre, eau, bois. Jamais de marketing, jamais de wellness.',
-  },
-  {
-    n: '04', label: 'Manifeste', tag: 'Validée' as const,
-    title: 'Chauffer. Refroidir. Respirer.',
-    body: 'Un lieu-culte hors des logiques touristiques. Une alternance. Un retour à soi.',
-  },
-];
+const CARD_SECTIONS = [
+  { key: 'brand_identity', label: 'Identité',  n: '01' },
+  { key: 'mission',        label: 'Mission',   n: '02' },
+  { key: 'archetype',      label: 'Archétype', n: '04' },
+  { key: 'tone_of_voice',  label: 'Ton',       n: '07' },
+] as const;
+
+function truncate(text: string, max = 150): string {
+  if (!text || text.length <= max) return text ?? '';
+  return text.slice(0, max).trimEnd() + '…';
+}
 
 export default async function DashboardPage({ params }: { params: Promise<{ brand: string }> }) {
   const { brand: brandSlug } = await params;
-  const brand = brandSlug.toUpperCase();
+
+  const access = await requireBrandAccess(brandSlug);
+  if (!access) notFound();
+
+  const supabase = await createClient();
+  const { data: structure } = await supabase
+    .from('brand_structures')
+    .select('sections, version, updated_at')
+    .eq('client_id', access.clientId)
+    .eq('status', 'published')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const sections = (structure?.sections ?? {}) as Record<string, string>;
+  const version = structure?.version ?? null;
+  const updatedAt = structure?.updated_at
+    ? new Date(structure.updated_at).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  const brand = access.brandName;
 
   return (
     <div className="portal-layout" style={{ background: C.black, color: C.bone }}>
-      <Sidebar variant="client" brand={brand} />
+      <Sidebar variant="client" brand={brandSlug} />
       <div className="portal-main">
         <TopBar
           theme="dark"
           crumbs={[brand, 'Dashboard']}
           right={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            access.isAdmin ? (
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.fg3 }}>
-                J-S. Auclair — Admin marque
+                Admin marque
               </span>
-              <div style={{
-                width: 34, height: 34, background: C.bone, color: C.black,
-                display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700,
-              }}>JA</div>
-            </div>
+            ) : null
           }
         />
 
         <div className="portal-scroll" style={{ padding: '48px 48px 40px' }}>
+          {!structure && (
+            <div style={{
+              padding: '16px 20px', marginBottom: 32,
+              background: 'rgba(245,230,25,0.10)', border: `1px solid ${C.yellowDark}`,
+              color: C.bone, fontSize: 13, lineHeight: 1.6,
+            }}>
+              <Eyebrow color={C.yellowDark} style={{ marginBottom: 6 }}>Structure non publiée</Eyebrow>
+              L&apos;agence doit publier la stratégie de marque avant que les sections, le chat et l&apos;export ne soient disponibles.
+            </div>
+          )}
+
           {/* Brand header */}
           <div className="section-head-row" style={{
             paddingBottom: 36, borderBottom: `1px solid ${C.line2}`, marginBottom: 40,
@@ -62,15 +81,21 @@ export default async function DashboardPage({ params }: { params: Promise<{ bran
               <div style={{ fontSize: 'clamp(48px, 6.5vw, 96px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.92, marginBottom: 16 }}>
                 {brand}.
               </div>
-              <div style={{ fontSize: 18, color: C.boneDim, maxWidth: 520, lineHeight: 1.5 }}>
-                Ralentir, le temps d&apos;un rituel.
-              </div>
+              {sections.manifesto && (
+                <div style={{ fontSize: 18, color: C.boneDim, maxWidth: 520, lineHeight: 1.5 }}>
+                  {truncate(sections.manifesto, 120)}
+                </div>
+              )}
             </div>
             <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Eyebrow color={C.fg3}>Dernière mise à jour</Eyebrow>
-              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em' }}>Aujourd&apos;hui · 14:22</div>
-              <div style={{ fontSize: 12, color: C.fg3, letterSpacing: '0.04em' }}>par betula — v 1.3</div>
-              <div style={{ marginTop: 6 }}><Pill kind="active">Publié</Pill></div>
+              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em' }}>{updatedAt ?? '—'}</div>
+              {version !== null && (
+                <div style={{ fontSize: 12, color: C.fg3, letterSpacing: '0.04em' }}>betula — v {version}</div>
+              )}
+              <div style={{ marginTop: 6 }}>
+                <Pill kind={structure ? 'active' : 'draft'}>{structure ? 'Publié' : 'Brouillon'}</Pill>
+              </div>
             </div>
           </div>
 
@@ -108,24 +133,30 @@ export default async function DashboardPage({ params }: { params: Promise<{ bran
           <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>02 / Noyau de marque</Eyebrow>
 
           <div className="grid-4" style={{ gap: 0, border: `1px solid ${C.line2}` }}>
-            {cards.map((c, i) => (
-              <div key={c.n} style={{
-                padding: '28px 26px', background: C.panel,
-                borderRight: i < cards.length - 1 ? `1px solid ${C.line2}` : 'none',
-                display: 'flex', flexDirection: 'column', gap: 14, minHeight: 280,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: C.red, fontWeight: 700, fontSize: 12, letterSpacing: '0.16em', fontVariantNumeric: 'tabular-nums' }}>{c.n} /</span>
-                  <Pill kind={c.tag === 'Modifié' ? 'modified' : 'validated'} dot={false}>{c.tag}</Pill>
-                </div>
-                <Eyebrow color={C.fg3}>{c.label}</Eyebrow>
-                <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: 1.15, color: C.bone }}>{c.title}</div>
-                <div style={{ fontSize: 13, color: C.boneDim, lineHeight: 1.6, flex: 1 }}>{c.body}</div>
-                <div style={{ paddingTop: 14, borderTop: `1px solid ${C.line}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.fg3, display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Ouvrir</span><span>→</span>
-                </div>
-              </div>
-            ))}
+            {CARD_SECTIONS.map((c, i) => {
+              const content = sections[c.key] ?? '';
+              return (
+                <Link key={c.key} href={`/${brandSlug}/strategie`} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    padding: '28px 26px', background: C.panel,
+                    borderRight: i < CARD_SECTIONS.length - 1 ? `1px solid ${C.line2}` : 'none',
+                    display: 'flex', flexDirection: 'column', gap: 14, minHeight: 240,
+                    cursor: 'pointer',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: C.red, fontWeight: 700, fontSize: 12, letterSpacing: '0.16em', fontVariantNumeric: 'tabular-nums' }}>{c.n} /</span>
+                    </div>
+                    <Eyebrow color={C.fg3}>{c.label}</Eyebrow>
+                    <div style={{ fontSize: 13, color: C.boneDim, lineHeight: 1.6, flex: 1 }}>
+                      {content ? truncate(content) : <span style={{ color: C.muted, fontStyle: 'italic' }}>Non défini</span>}
+                    </div>
+                    <div style={{ paddingTop: 14, borderTop: `1px solid ${C.line}`, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.fg3, display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Ouvrir</span><span>→</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ interface SidebarProps {
   variant?: SidebarVariant;
   brand?: string;
   clientId?: string;
+  hasPublishedVersion?: boolean;
 }
 
 interface SidebarContentProps {
@@ -21,16 +22,26 @@ interface SidebarContentProps {
   isActive: (href: string) => boolean;
 }
 
-const agencyItems = (clientId?: string) => [
-  { id: 'clients', n: '01', label: 'Clients',              href: '/clients' },
-  { id: 'import',  n: '02', label: 'Import Disto',         href: clientId ? `/clients/${clientId}/import` : '/clients' },
-  { id: 'editor',  n: '03', label: 'Éditeur de structure', href: clientId ? `/clients/${clientId}/editor` : '/clients' },
-  { id: 'access',  n: '04', label: 'Accès',                href: clientId ? `/clients/${clientId}/access` : '/clients' },
-];
+const agencyItems = (clientId?: string, hasPublishedVersion?: boolean) => {
+  const items = [
+    { id: 'clients', n: '01', label: 'Clients', href: '/clients' },
+  ];
+  if (clientId) {
+    items.push(
+      { id: 'import', n: '02', label: 'Import Disto',         href: `/clients/${clientId}/import` },
+      { id: 'editor', n: '03', label: 'Éditeur de structure', href: `/clients/${clientId}/editor` },
+      { id: 'access', n: '04', label: 'Accès',                href: `/clients/${clientId}/access` },
+    );
+    if (hasPublishedVersion) {
+      items.push({ id: 'system-prompt', n: '05', label: 'System Prompt', href: `/clients/${clientId}/system-prompt` });
+    }
+  }
+  return items;
+};
 
 const clientItems = (brand: string) => [
   { id: 'dashboard', n: '01', label: 'Dashboard',            href: `/${brand}` },
-  { id: 'strategy',  n: '02', label: 'Stratégie',            href: `/${brand}/strategy` },
+  { id: 'strategie', n: '02', label: 'Stratégie',            href: `/${brand}/strategie` },
   { id: 'chat',      n: '03', label: 'Interroger la marque', href: `/${brand}/chat` },
   { id: 'export',    n: '04', label: 'System Prompt',        href: `/${brand}/export` },
 ];
@@ -140,14 +151,17 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
   );
 }
 
-export default function Sidebar({ variant = 'agency', brand, clientId }: SidebarProps) {
+export default function Sidebar({ variant = 'agency', brand, clientId, hasPublishedVersion }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const resolvedBrand = brand ?? 'SARTIGA';
-  const items = variant === 'agency' ? agencyItems(clientId) : clientItems(resolvedBrand);
-  const isActive = (href: string) =>
-    pathname === href || (href !== '/' && pathname.startsWith(href));
+  const items = variant === 'agency' ? agencyItems(clientId, hasPublishedVersion) : clientItems(resolvedBrand);
+  const exactRoots = new Set<string>(['/', `/${resolvedBrand}`, '/clients']);
+  const isActive = (href: string) => {
+    if (exactRoots.has(href)) return pathname === href;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {

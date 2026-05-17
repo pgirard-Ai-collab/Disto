@@ -4,6 +4,7 @@ import { C } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
+import { hasPublishedStructure } from '@/lib/has-published';
 import EditorPanel from './EditorPanel';
 
 export default async function EditorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,10 +27,12 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
     .limit(1)
     .maybeSingle();
 
+  const hasPublished = await hasPublishedStructure(id);
+
   if (!structure) {
     return (
       <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-        <Sidebar variant="agency" clientId={id} />
+        <Sidebar variant="agency" clientId={id} hasPublishedVersion={hasPublished} />
         <div className="portal-main">
           <TopBar theme="light" crumbs={['betula', client.brand_name, 'Éditeur']} right={<UserMenu theme="light" />} />
           <div className="portal-scroll" style={{ padding: '48px 40px', textAlign: 'center', color: C.muted, fontSize: 15 }}>
@@ -42,7 +45,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-      <Sidebar variant="agency" clientId={id} />
+      <Sidebar variant="agency" clientId={id} hasPublishedVersion={hasPublished} />
       <div className="portal-main">
         <TopBar
           theme="light"

@@ -5,6 +5,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
 import SectionHead from '@/components/ui/SectionHead';
+import { hasPublishedStructure } from '@/lib/has-published';
 import ImportPanel from './ImportPanel';
 
 export default async function ImportPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,9 +37,11 @@ export default async function ImportPage({ params }: { params: Promise<{ id: str
     .limit(1)
     .maybeSingle();
 
+  const hasPublished = await hasPublishedStructure(id);
+
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
-      <Sidebar variant="agency" clientId={id} />
+      <Sidebar variant="agency" clientId={id} hasPublishedVersion={hasPublished} />
       <div className="portal-main">
         <TopBar
           theme="light"
