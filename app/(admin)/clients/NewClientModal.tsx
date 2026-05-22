@@ -68,10 +68,6 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
     if (slugError) return;
 
     const validEmails = emails.filter(r => r.email.trim());
-    if (validEmails.length === 0) {
-      setServerError('Au moins un email admin client est requis.');
-      return;
-    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     for (const r of validEmails) {
       if (!emailRegex.test(r.email)) {
@@ -182,7 +178,7 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label style={labelStyle}>Email(s) admin client *</label>
+            <label style={labelStyle}>Email(s) admin client (optionnel)</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {emails.map((row, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8 }}>

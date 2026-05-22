@@ -48,9 +48,6 @@ export async function createClientRecord(formData: FormData): Promise<ClientActi
   } catch {
     return { success: false, error: 'Liste d\'emails invalide.' };
   }
-  if (invites.length === 0) {
-    return { success: false, error: 'Au moins un email admin client est requis.' };
-  }
 
   // Validate logo upload constraints if provided
   let logoUrl: string | null = null;
