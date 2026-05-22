@@ -6,6 +6,7 @@ import Btn from '@/components/ui/Btn';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Pill from '@/components/ui/Pill';
 import { saveBrandStructure, publishBrandStructure } from '@/app/actions/brand-structure';
+import VersionHistoryDrawer from './VersionHistoryDrawer';
 
 const SECTION_KEYS = [
   'brand_identity', 'mission', 'brand_intention', 'archetype',
@@ -36,13 +37,16 @@ const SECTION_LABELS: Record<SectionKey, { num: string; name: string; desc: stri
 type StructureStatus = 'draft' | 'published' | 'modified';
 
 type Props = {
+  clientId: string;
   structureId: string;
   brandName: string;
   initialSections: Record<string, string>;
   initialStatus: StructureStatus;
 };
 
-export default function EditorPanel({ structureId, brandName, initialSections, initialStatus }: Props) {
+export default function EditorPanel({ clientId, structureId: initialStructureId, brandName, initialSections, initialStatus }: Props) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [structureId, setStructureId] = useState(initialStructureId);
   const [sections, setSections] = useState<Record<string, string>>(initialSections);
   const [activeKey, setActiveKey] = useState<SectionKey>('brand_identity');
   const [status, setStatus] = useState<StructureStatus>(initialStatus);
@@ -52,27 +56,28 @@ export default function EditorPanel({ structureId, brandName, initialSections, i
   const [showPublishDialog, setShowPublishDialog] = useState(false);
 
   // Refs to avoid stale closures in autosave callback
-  const statusRef = useRef(initialStatus);
+  const structureIdRef = useRef(initialStructureId);
   const sectionsRef = useRef(initialSections);
   const lastSavedRef = useRef<Record<string, string>>(initialSections);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { statusRef.current = status; }, [status]);
+  useEffect(() => { structureIdRef.current = structureId; }, [structureId]);
   useEffect(() => { sectionsRef.current = sections; }, [sections]);
 
   const save = useCallback(async () => {
     const data = sectionsRef.current;
-    const currentStatus = statusRef.current;
     setSaveState('saving');
 
-    const result = await saveBrandStructure(structureId, data, currentStatus);
+    const result = await saveBrandStructure(structureIdRef.current, data);
     if (!result.success) { setSaveState('error'); return; }
 
+    // Each save creates a new row, so capture its id for the next save
+    setStructureId(result.structureId);
+    setStatus(result.status);
     lastSavedRef.current = data;
-    if (currentStatus === 'published') setStatus('modified');
     setSaveState('saved');
     setTimeout(() => setSaveState(prev => (prev === 'saved' ? 'idle' : prev)), 2000);
-  }, [structureId]);
+  }, []);
 
   function handleChange(val: string) {
     const updated = { ...sectionsRef.current, [activeKey]: val };
@@ -97,7 +102,7 @@ export default function EditorPanel({ structureId, brandName, initialSections, i
     // Cancel any pending autosave to avoid races with the publish update
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
 
-    const result = await publishBrandStructure(structureId, sectionsRef.current);
+    const result = await publishBrandStructure(structureIdRef.current, sectionsRef.current);
     if (!result.success) { setPublishError(result.error); setPublishing(false); return; }
 
     lastSavedRef.current = sectionsRef.current;
@@ -121,6 +126,12 @@ export default function EditorPanel({ structureId, brandName, initialSections, i
 
   return (
     <>
+      <VersionHistoryDrawer
+        clientId={clientId}
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
+
       {showPublishDialog && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.45)',
@@ -157,6 +168,11 @@ export default function EditorPanel({ structureId, brandName, initialSections, i
           {saveState === 'idle' && unsaved && '● Modifications non sauvegardées'}
         </span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+          <Btn variant="ghost" size="sm" onClick={() => setHistoryOpen(true)}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span aria-hidden style={{ fontSize: 13 }}>⟲</span> Historique
+            </span>
+          </Btn>
           <Btn variant="ghost" size="sm" onClick={handleSaveNow} disabled={saveState === 'saving'}>
             Sauvegarder
           </Btn>

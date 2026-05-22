@@ -23,8 +23,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
     .from('brand_structures')
     .select('id, sections, status')
     .eq('client_id', id)
-    .order('version', { ascending: false })
-    .limit(1)
+    .eq('is_current', true)
     .maybeSingle();
 
   const hasPublished = await hasPublishedStructure(id);
@@ -54,6 +53,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
         />
         <div className="portal-scroll" style={{ padding: '28px 40px 40px', display: 'flex', flexDirection: 'column', flex: 1 }}>
           <EditorPanel
+            clientId={id}
             structureId={structure.id}
             brandName={client.brand_name}
             initialSections={structure.sections as Record<string, string>}

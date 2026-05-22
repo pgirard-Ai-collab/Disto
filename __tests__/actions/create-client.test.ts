@@ -128,11 +128,11 @@ describe('createClientRecord', () => {
     expect(result).toEqual({ success: false, error: 'Slug invalide — lettres minuscules, chiffres et tirets seulement.' });
   });
 
-  it('retourne une erreur si aucun email n\'est fourni', async () => {
+  it('crée le client sans invitation quand la liste d\'emails est vide', async () => {
     vi.mocked(createClient).mockResolvedValue(makeCallerMock() as never);
     vi.mocked(createAdminClient).mockResolvedValue(makeAdminMock() as never);
     const result = await createClientRecord(makeFormData({ invites: JSON.stringify([]) }));
-    expect(result).toEqual({ success: false, error: 'Au moins un email admin client est requis.' });
+    expect(result).toEqual({ success: true, clientId: 'new-client-uuid' });
   });
 
   it('retourne une erreur si la liste d\'invitations est du JSON invalide', async () => {

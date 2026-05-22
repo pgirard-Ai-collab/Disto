@@ -135,24 +135,23 @@ async function runPipeline(
     if (mode === 'replace') {
       const { data: existing } = await admin
         .from('brand_structures')
-        .select('id, version')
+        .select('id, version, is_current')
         .eq('client_id', clientId)
-        .order('version', { ascending: false })
-        .limit(1)
+        .eq('is_current', true)
         .maybeSingle();
 
       if (existing) {
-        // True replace: update the latest row in place, keeping the same version number
+        // True replace: overwrite the current row in place (preserves is_current)
         await admin.from('brand_structures')
           .update({ sections, status: 'draft', published_at: null })
           .eq('id', existing.id);
       } else {
         await admin.from('brand_structures').insert({
-          client_id: clientId, sections, status: 'draft', version: 1,
+          client_id: clientId, sections, status: 'draft', version: 1, is_current: true,
         });
       }
     } else {
-      // version mode: insert a new version
+      // version mode: insert a new version and make it current
       const { data: latest } = await admin
         .from('brand_structures')
         .select('version')
@@ -161,8 +160,12 @@ async function runPipeline(
         .limit(1)
         .maybeSingle();
       const version = (latest?.version ?? 0) + 1;
+      await admin.from('brand_structures')
+        .update({ is_current: false })
+        .eq('client_id', clientId)
+        .eq('is_current', true);
       await admin.from('brand_structures').insert({
-        client_id: clientId, sections, status: 'draft', version,
+        client_id: clientId, sections, status: 'draft', version, is_current: true,
       });
     }
 
