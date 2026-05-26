@@ -1,0 +1,572 @@
+{
+  "serverActions": {
+    "errors": {
+      "unauthenticated": "Non authentifié.",
+      "accessDenied": "Accès refusé.",
+      "missingIds": "Identifiants manquants.",
+      "missingFields": "Tous les champs sont requis.",
+      "clientNotFound": "Client introuvable.",
+      "userNotFound": "Utilisateur introuvable.",
+      "structureNotFound": "Structure introuvable.",
+      "versionNotFound": "Version introuvable.",
+      "genericCreate": "Erreur lors de la création. Veuillez réessayer.",
+      "profileCreate": "Erreur lors de la création du profil. Veuillez réessayer.",
+      "accessCreate": "Erreur lors de la création de l'accès. Veuillez réessayer.",
+      "loadError": "Erreur lors du chargement de l'historique.",
+      "publishError": "Erreur lors de la publication.",
+      "restoreError": "Erreur lors de la restauration.",
+      "saveError": "Erreur lors de la sauvegarde.",
+      "slugTaken": "Ce slug est déjà utilisé.",
+      "slugInvalid": "Slug invalide — lettres minuscules, chiffres et tirets seulement.",
+      "orgRequired": "Nom organisation, marque et slug sont requis.",
+      "invitesInvalid": "Liste d'emails invalide.",
+      "logoTooBig": "Le logo dépasse 2 MB.",
+      "logoBadFormat": "Logo : PNG ou SVG uniquement.",
+      "emailExists": "Un compte existe déjà pour cette adresse.",
+      "inviteFailed": "Impossible d'envoyer l'invitation. Veuillez réessayer.",
+      "resendFailed": "Impossible de renvoyer l'invitation. Veuillez réessayer.",
+      "disableAccess": "Impossible de désactiver l'accès. Veuillez réessayer.",
+      "disableAccount": "Impossible de désactiver ce compte. Veuillez réessayer.",
+      "unarchiveFailed": "Impossible de réactiver ce client.",
+      "archiveFailed": "Impossible d'archiver ce client.",
+      "alreadyCurrent": "Cette version est déjà la version courante.",
+      "archivedBeforePublish": "Ce client est archivé. Réactivez-le avant de publier.",
+      "archivedBeforeRestore": "Ce client est archivé. Réactivez-le avant de restaurer.",
+      "rateLimit": "Trop de tentatives. Patientez une minute avant de réessayer.",
+      "generic": "Erreur."
+    }
+  },
+  "common": {
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "save": "Sauvegarder",
+    "back": "Retour",
+    "open": "Ouvrir",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "edit": "Modifier",
+    "send": "Envoyer",
+    "loading": "Chargement…",
+    "retry": "Réessayer",
+    "brandOs": "Brand OS",
+    "brandActor": "betula",
+    "brandActorTagline": "Centre de thermothérapie",
+    "brandFooter": "Signal clair",
+    "betulaDisto": "betula × disto",
+    "edition": "— Édition 2026 —",
+    "city": "Québec / MTL",
+    "notDefined": "Non défini"
+  },
+  "status": {
+    "active": "Actif",
+    "invited": "Invité",
+    "disabled": "Désactivé",
+    "draft": "Brouillon",
+    "archived": "Archivé",
+    "published": "Publié",
+    "modified": "Modifié",
+    "validated": "Validé",
+    "auto": "Auto",
+    "default": "—"
+  },
+  "language": {
+    "label": "Langue",
+    "french": "Français",
+    "english": "English"
+  },
+  "auth": {
+    "login": {
+      "eyebrow1": "01 / Signal clair",
+      "heroLine1": "Une seule vérité",
+      "heroLine2": "de marque.",
+      "tagline": "Le portail betula centralise la stratégie, le ton et le prompt système de chaque marque — pour que chaque production reste fidèle au signal.",
+      "eyebrow2": "02 / Connexion",
+      "title": "Entrer au portail.",
+      "subtitle": "Nous identifions votre rôle après connexion — agence ou gardien de marque.",
+      "emailLabel": "Courriel",
+      "emailPlaceholder": "prenom.nom@agence.co",
+      "passwordLabel": "Mot de passe",
+      "forgot": "Oublié ?",
+      "submitting": "Connexion…",
+      "submit": "Se connecter  →",
+      "noAccount": "Pas encore de compte ?",
+      "requestAccess": "Demander un accès →",
+      "errors": {
+        "invalidCredentials": "Courriel ou mot de passe incorrect.",
+        "disabled": "Ce compte a été désactivé. Contactez votre administrateur.",
+        "generic": "Une erreur est survenue. Veuillez réessayer.",
+        "noPortal": "Aucun portail associé à ce compte. Contactez votre administrateur."
+      }
+    },
+    "forgot": {
+      "eyebrow1": "01 / Récupération",
+      "heroLine1": "Retrouver",
+      "heroLine2": "l'accès.",
+      "tagline": "Entrez votre adresse courriel et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+      "eyebrow2": "02 / Mot de passe oublié",
+      "title": "Réinitialiser le\nmot de passe.",
+      "subtitle": "Entrez votre adresse courriel associée à votre compte.",
+      "emailLabel": "Courriel",
+      "emailPlaceholder": "prenom.nom@marque.co",
+      "submitting": "Envoi…",
+      "submit": "Envoyer le lien  →",
+      "back": "← Retour à la connexion",
+      "successTitle": "Courriel envoyé.",
+      "successBody": "Si un compte existe pour <strong>{email}</strong>, vous recevrez un lien de réinitialisation dans les prochaines minutes."
+    },
+    "password": {
+      "errors": {
+        "mismatch": "Les mots de passe ne correspondent pas.",
+        "too_short": "Le mot de passe doit contenir au moins 8 caractères."
+      }
+    },
+    "setPassword": {
+      "eyebrow1": "01 / Bienvenue",
+      "heroLine1": "Votre portail",
+      "heroLine2": "vous attend.",
+      "tagline": "Définissez votre mot de passe pour accéder à l'espace de votre marque.",
+      "eyebrow2": "02 / Activation",
+      "title": "Choisir un mot\nde passe.",
+      "subtitle": "Ce mot de passe sera associé à votre compte. Minimum 8 caractères.",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "submitting": "Activation…",
+      "submit": "Activer mon compte  →",
+      "errors": {
+        "expired": "Lien expiré. Cliquez sur « Renvoyer » dans la liste des utilisateurs pour obtenir un nouveau lien.",
+        "invalid": "Lien invalide ou expiré. Demandez une nouvelle invitation.",
+        "generic": "Impossible de définir le mot de passe. Veuillez réessayer."
+      }
+    },
+    "updatePassword": {
+      "eyebrow1": "01 / Sécurité",
+      "heroLine1": "Nouveau",
+      "heroLine2": "mot de passe.",
+      "tagline": "Choisissez un mot de passe fort pour sécuriser votre accès.",
+      "eyebrow2": "02 / Nouveau mot de passe",
+      "title": "Choisir un nouveau\nmot de passe.",
+      "subtitle": "Minimum 8 caractères. Vous serez redirigé vers la connexion après.",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "submitting": "Mise à jour…",
+      "submit": "Mettre à jour  →",
+      "errors": {
+        "invalid": "Lien invalide ou expiré. Veuillez recommencer depuis « Mot de passe oublié ».",
+        "generic": "Impossible de mettre à jour le mot de passe. Veuillez réessayer."
+      }
+    }
+  },
+  "crumbs": {
+    "betula": "betula",
+    "brand": "{name}",
+    "console": "Console",
+    "clients": "Clients",
+    "client": "Client",
+    "editor": "Éditeur",
+    "access": "Accès",
+    "import": "Import",
+    "systemPrompt": "System Prompt",
+    "portal": "Portail",
+    "dashboard": "Tableau de bord",
+    "strategie": "Stratégie",
+    "chat": "Chat",
+    "export": "Export"
+  },
+  "sidebar": {
+    "agency": "Agence",
+    "brand": "Marque",
+    "agencyConsole": "Console agence",
+    "brandPortal": "Portail marque",
+    "menuLabel": "Menu",
+    "agency_clients": "Clients",
+    "agency_import": "Import Disto",
+    "agency_editor": "Éditeur de structure",
+    "agency_access": "Accès",
+    "agency_systemPrompt": "System Prompt",
+    "client_dashboard": "Dashboard",
+    "client_strategie": "Stratégie",
+    "client_chat": "Interroger la marque",
+    "client_systemPrompt": "System Prompt"
+  },
+  "userMenu": {
+    "menuLabel": "Menu utilisateur",
+    "logout": "Se déconnecter →",
+    "fallbackName": "Utilisateur",
+    "role": {
+      "agency_admin": "Agence Admin",
+      "client_admin": "Admin",
+      "client_reader": "Lecteur"
+    }
+  },
+  "admin": {
+    "clients": {
+      "eyebrow": "Console · Agence betula",
+      "title": "Clients",
+      "subtitle": "Chaque marque que nous accompagnons possède un portail. Draft, actif ou archivé — toujours un seul signal.",
+      "loadError": "Erreur lors du chargement des clients : ",
+      "filter": {
+        "all": "Tous",
+        "active": "Actif",
+        "draft": "Brouillon",
+        "archived": "Archivé"
+      },
+      "table": {
+        "brand": "Marque",
+        "organization": "Organisation",
+        "status": "Statut",
+        "lastUpdate": "Dernière MAJ",
+        "num": "№",
+        "emptyAll": "Aucun client",
+        "emptyFiltered": "Aucun client {filter}"
+      },
+      "newClient": "+ Nouveau client",
+      "archive": "Archiver",
+      "unarchive": "Réactiver",
+      "archiveConfirmTitle": "Archiver ce client ?",
+      "unarchiveConfirmTitle": "Réactiver ce client ?",
+      "archiveConfirmBody": "Le client <strong>{name}</strong> sera marqué comme archivé. Ses données sont conservées.",
+      "unarchiveConfirmBody": "Le client <strong>{name}</strong> redeviendra actif.",
+      "countSingular": "{count} sur {total} marque",
+      "countPlural": "{count} sur {total} marques",
+      "sort": "Tri · Dernière MAJ ↓"
+    },
+    "newClientModal": {
+      "title": "Nouveau client",
+      "orgLabel": "Nom de l'organisation *",
+      "orgPlaceholder": "Ex. : Sartiga Inc.",
+      "brandLabel": "Nom de la marque *",
+      "brandPlaceholder": "Ex. : SARTIGA",
+      "slugLabel": "Slug URL *",
+      "slugPlaceholder": "ex. sartiga",
+      "slugHelp": "Utilisé dans l'URL du portail client.",
+      "slugInvalid": "Lettres minuscules, chiffres et tirets seulement.",
+      "slugTaken": "Ce slug est déjà utilisé.",
+      "logoLabel": "Logo (optionnel)",
+      "logoChange": "Changer",
+      "logoChoose": "Choisir",
+      "logoHelp": "PNG ou SVG · max 2 MB",
+      "logoTooBig": "Le logo dépasse 2 MB.",
+      "logoBadFormat": "PNG ou SVG uniquement.",
+      "adminEmailsLabel": "Email(s) admin client (optionnel)",
+      "adminEmailPlaceholder": "prenom.nom@marque.co",
+      "roleAdmin": "Admin",
+      "roleReader": "Lecteur",
+      "addEmail": "+ Ajouter un email",
+      "emailInvalid": "Email invalide : ",
+      "creating": "Création…",
+      "create": "Créer le client"
+    },
+    "editor": {
+      "title": "Éditeur",
+      "empty": "Aucune structure de marque. Commencez par importer un Disto.",
+      "structureHeader": "Structure · 14 sections",
+      "sectionContentPlaceholder": "Contenu de la section « {name} »…",
+      "markdownSupported": "Markdown supporté",
+      "publishConfirmTitle": "Publier la structure ?",
+      "publishConfirmBody": "Le Portail Client de <strong>{brand}</strong> reflétera immédiatement cette structure.",
+      "publishConfirmUnsaved": "⚠ Des modifications non sauvegardées seront incluses.",
+      "publishing": "Publication…",
+      "publish": "Publier →",
+      "history": "⟲ Historique",
+      "saveState": {
+        "saving": "● Sauvegarde…",
+        "saved": "✓ Sauvegardé",
+        "error": "✕ Erreur de sauvegarde",
+        "dirty": "● Modifications non sauvegardées"
+      },
+      "status": {
+        "draft": "Brouillon",
+        "published": "Publié",
+        "modified": "Modifié depuis publication"
+      },
+      "section": {
+        "identity": "Identité",
+        "mission": "Mission",
+        "intention": "Intention",
+        "archetype": "Archétype",
+        "valueProposition": "Value Proposition",
+        "positioning": "Positionnement",
+        "tone": "Ton",
+        "personas": "Personas",
+        "keyMessages": "Messages clés",
+        "manifesto": "Manifeste",
+        "competitiveContext": "Contexte concurrent.",
+        "values": "Valeurs",
+        "alwaysSay": "Toujours dire",
+        "neverSay": "Ne jamais dire"
+      },
+      "sectionDesc": {
+        "identity": "Nom, sous-titre, tagline.",
+        "mission": "Raison d'être de la marque.",
+        "intention": "Ce que la marque veut créer.",
+        "archetype": "Archétype de marque + description.",
+        "valueProposition": "Proposition de valeur unique.",
+        "positioning": "Positionnement concurrentiel.",
+        "tone": "Ton et personnalité de la marque.",
+        "personas": "Cibles principales.",
+        "keyMessages": "Messages clés par cible.",
+        "manifesto": "Texte manifeste de la marque.",
+        "competitiveContext": "Contexte concurrentiel.",
+        "values": "Valeurs fondamentales.",
+        "alwaysSay": "Mots-clés et phrases types à privilégier (un par ligne, préfixé de \"- \").",
+        "neverSay": "Mots-clés interdits (un par ligne, préfixé de \"- \")."
+      }
+    },
+    "versionHistory": {
+      "title": "Historique",
+      "subtitlePrevious": "Versions précédentes",
+      "subtitleVersion": "Version {version}",
+      "loading": "Chargement…",
+      "empty": "Aucune version précédente. L'historique s'enrichira à chaque sauvegarde.",
+      "current": "Version courante",
+      "publishedTag": "Publiée (visible client)",
+      "restoredFrom": "Restaurée de v{version}",
+      "backToList": "← Retour à la liste",
+      "emptyContent": "Aucun contenu dans cette version.",
+      "restoreConfirmTitle": "Restaurer la version {version} ?",
+      "restoreConfirmBody": "Du {date}. Une nouvelle version sera créée et publiée immédiatement. Le client verra le nouveau contenu sous quelques secondes.",
+      "restoring": "Restauration…",
+      "restore": "Restaurer et publier",
+      "restoreThisVersion": "Restaurer cette version →",
+      "emptySection": "(vide)",
+      "status": {
+        "draft": "Brouillon",
+        "published": "Publiée",
+        "modified": "Modifiée",
+        "archived": "Archivée"
+      },
+      "relative": {
+        "now": "à l'instant",
+        "minutes": "il y a {n} min",
+        "hours": "il y a {n} h",
+        "days": "il y a {n} j",
+        "months": "il y a {n} mois",
+        "yearsSingular": "il y a {n} an",
+        "yearsPlural": "il y a {n} ans"
+      }
+    },
+    "import": {
+      "title": "Import Disto",
+      "heading": "Import Disto.",
+      "subtitle": "Déposez le document brand du client. Nous extrayons, nous structurons, vous validez.",
+      "step": {
+        "upload": "Upload",
+        "extraction": "Extraction",
+        "structuring": "Structuration IA",
+        "save": "Enregistrement"
+      },
+      "pdfOnly": "Format PDF uniquement.",
+      "tooBig": "Le fichier dépasse 50 MB.",
+      "serverError": "Erreur serveur.",
+      "unknownError": "Erreur inconnue.",
+      "existingStructureTitle": "Structure existante détectée",
+      "existingStructureBody": "Une structure de marque existe déjà (v{version}). Voulez-vous la remplacer ou créer une nouvelle version ?",
+      "newVersion": "Nouvelle version",
+      "replace": "Remplacer",
+      "pdfTag": "PDF",
+      "fileSelected": "Fichier sélectionné",
+      "dropHere": "Déposez le PDF ici",
+      "fileHelp": "PDF uniquement · max 50 MB",
+      "change": "Changer",
+      "choose": "Choisir un fichier",
+      "launch": "Lancer l'ingestion →",
+      "retry": "Réessayer",
+      "pipelineHeader": "Pipeline · 4 étapes",
+      "inProgress": "● En cours…",
+      "done": "Terminé",
+      "openEditor": "Ouvrir l'éditeur →"
+    },
+    "access": {
+      "title": "Accès",
+      "heading": "Qui peut lire, qui peut écrire.",
+      "subtitle": "Un Admin modifie la structure et publie. Un Lecteur consulte le portail et interroge l'IA — jamais plus.",
+      "stats": {
+        "totalUsers": "Utilisateurs totaux",
+        "admins": "Admins",
+        "pendingInvites": "Invités en attente",
+        "disabled": "Désactivés"
+      },
+      "usersHeading": "Utilisateurs {brand}",
+      "empty": "Aucun utilisateur invité pour l'instant.",
+      "table": {
+        "email": "Courriel",
+        "role": "Rôle",
+        "status": "Statut",
+        "invitedAt": "Invité le"
+      }
+    },
+    "inviteForm": {
+      "title": "Nouvelle invitation",
+      "subtitle": "Ajouter un gardien de marque.",
+      "emailLabel": "Courriel",
+      "emailPlaceholder": "prenom.nom@marque.co",
+      "roleLabel": "Rôle",
+      "roleAdmin": "Admin",
+      "roleReader": "Lecteur",
+      "sending": "Envoi…",
+      "submit": "Envoyer  →",
+      "success": "Invitation envoyée à {email}."
+    },
+    "disableUser": {
+      "close": "Fermer",
+      "disableTitle": "Désactiver le compte",
+      "disableBody": "Désactiver le compte de <strong>{userName}</strong> ? Cette action est irréversible.",
+      "confirm": "Confirmer",
+      "cancel": "Annuler",
+      "resendTitle": "Renvoyer l'invitation",
+      "resendBody": "Renvoyer un lien d'invitation à <strong>{userName}</strong> ?",
+      "resendConfirm": "Renvoyer",
+      "disabledTag": "Désactivé",
+      "sentTag": "Envoyé ✓",
+      "resend": "Renvoyer",
+      "disable": "Désactiver"
+    },
+    "systemPrompt": {
+      "title": "System Prompt",
+      "syncedVersion": "Synchronisé · v {version}"
+    }
+  },
+  "client": {
+    "dashboard": {
+      "brandAdmin": "Admin marque",
+      "notPublishedTitle": "Structure non publiée",
+      "notPublishedBody": "L'agence doit publier la stratégie de marque avant que les sections, le chat et l'export ne soient disponibles.",
+      "eyebrow": "№ 01 · Portail marque",
+      "lastUpdate": "Dernière mise à jour",
+      "publishedTag": "Publié",
+      "draftTag": "Brouillon",
+      "actionEyebrow1": "Action · 01",
+      "actionTitle1": "Interroger la marque.",
+      "actionSubtitle1": "Une IA qui connaît votre ton, votre archétype, vos règles.",
+      "actionEyebrow2": "Action · 02",
+      "actionTitle2": "Exporter le prompt.",
+      "actionSubtitle2": "ChatGPT · Claude · Gemini · .txt universel.",
+      "coreEyebrow": "02 / Noyau de marque"
+    },
+    "chat": {
+      "title": "Interroger la marque",
+      "notPublished": "Structure non publiée",
+      "aiVersion": "IA · v {version}",
+      "noStructureTitle": "Aucune structure publiée",
+      "noStructureBody": "L'agence doit d'abord importer et publier la stratégie de marque avant que l'IA puisse répondre.",
+      "suggestions": {
+        "tone": "Quel ton adopter sur Instagram ?",
+        "bio": "Rédigez une bio de marque courte",
+        "values": "Quelles sont nos trois valeurs fondamentales ?",
+        "differentiate": "Comment se différencier de nos concurrents ?"
+      },
+      "unknownError": "Erreur inconnue.",
+      "genericError": "Une erreur est survenue.",
+      "networkError": "Erreur réseau. Veuillez réessayer.",
+      "newThreadConfirm": "Démarrer une nouvelle conversation ? L'historique actuel sera perdu.",
+      "newThread": "Nouveau fil",
+      "askBrand": "Interrogez {brand}.",
+      "askIntro": "Posez vos questions sur votre stratégie de marque. L'IA connaît votre ton, votre archétype et vos règles.",
+      "brandAi": "{brand} · IA de marque",
+      "basedOn": "Basé sur",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "typing": "● En train d'écrire",
+      "suggestionsLabel": "Suggestions ·",
+      "inputPlaceholder": "Demander à la marque… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
+      "inputAria": "Question à la marque",
+      "send": "Envoyer →"
+    },
+    "strategie": {
+      "title": "Stratégie",
+      "search": "Rechercher…",
+      "searchAria": "Rechercher dans la stratégie",
+      "clearSearch": "Effacer la recherche",
+      "structureLabel": "Structure",
+      "noResults": "Aucun résultat pour \"{query}\"",
+      "strategieBrand": "Stratégie · {brand}",
+      "sectionEmpty": "Cette section n'a pas encore été définie.",
+      "structureUpdated": "Structure mise à jour",
+      "modify": "Modifier",
+      "modifyProposalTitle": "Proposition de modification",
+      "proposedContent": "Contenu proposé",
+      "submitProposal": "Proposer la mise à jour",
+      "cancel": "Annuler",
+      "proposalSent": "Votre proposition a été envoyée à l'agence pour validation.",
+      "cancelProposalConfirm": "Annuler la proposition en cours et changer de section ?",
+      "sendError": "Impossible d'envoyer la proposition.",
+      "networkError": "Erreur réseau. Veuillez réessayer.",
+      "submitting": "Envoi…",
+      "section": {
+        "identity": "Identité de la marque",
+        "mission": "Mission & Vision",
+        "intention": "Intention de marque",
+        "archetype": "Archétype",
+        "valueProposition": "Proposition de valeur",
+        "positioning": "Positionnement",
+        "tone": "Ton & Personnalité",
+        "personas": "Cibles & Personas",
+        "keyMessages": "Messages clés",
+        "manifesto": "Manifeste",
+        "competitiveContext": "Contexte concurrentiel",
+        "values": "Valeurs & Principes",
+        "alwaysSay": "Toujours dire",
+        "neverSay": "Ne jamais dire"
+      },
+      "relative": {
+        "now": "à l'instant",
+        "minutes": "il y a {n} min",
+        "hours": "il y a {n} h",
+        "days": "il y a {n} j",
+        "months": "il y a {n} mois",
+        "yearsSingular": "il y a {n} an",
+        "yearsPlural": "il y a {n} ans"
+      }
+    },
+    "export": {
+      "title": "System Prompt",
+      "eyebrow": "Portail marque · Export",
+      "heading": "System Prompt.",
+      "subtitle": "Un prompt compilé à partir de votre structure de marque. Collez-le au début d'une nouvelle conversation — chaque modèle parlera comme votre marque.",
+      "notPublishedTitle": "Structure non publiée",
+      "notPublishedBody": "L'agence doit publier la stratégie de marque avant que l'export ne soit disponible.",
+      "tokensEstimated": "Tokens estimés",
+      "generatedAt": "Généré le",
+      "copyAll": "Copier tout",
+      "copied": "Copié !",
+      "emptyContent": "Aucun contenu — la structure n'est pas publiée.",
+      "destinationsHeader": "Destinations · 04",
+      "whereToInstall": "Où l'installer ?",
+      "promptHeading": "# SYSTEM PROMPT · {brand}",
+      "format": "Format {ext}",
+      "download": "Télécharger",
+      "installInstructions": "Instructions d'installation",
+      "agencyTipLabel": "Conseil d'agence",
+      "agencyTipBody": "Recompilez le prompt après chaque publication majeure. Les modèles gardent en mémoire la dernière version collée — pas celle du portail.",
+      "downloadError": "Échec du téléchargement.",
+      "networkError": "Erreur réseau. Veuillez réessayer.",
+      "target": {
+        "chatgpt_custom_gpt": {
+          "label": "ChatGPT — Custom GPT",
+          "instructions": "1. Allez sur platform.openai.com → « My GPTs » → « Create a GPT »\n2. Dans l'onglet « Configure », collez le contenu dans le champ « Instructions »\n3. Donnez un nom à votre GPT (ex. « Assistant Marque ») et cliquez « Save »\n4. Partagez le lien avec votre équipe"
+        },
+        "claude_project": {
+          "label": "Claude — Project",
+          "instructions": "1. Allez sur claude.ai → « Projects » → « New Project »\n2. Cliquez sur « Set project instructions » et collez le contenu du fichier .md\n3. Nommez le projet (ex. « Marque ») et invitez vos collaborateurs\n4. Toutes les conversations du projet hériteront du system prompt"
+        },
+        "claude_skill": {
+          "label": "Claude — Skill",
+          "instructions": "CLAUDE.AI :\n1. Allez sur claude.ai → Settings → Capabilities → Skills\n2. Cliquez « Upload skill » et sélectionnez le fichier .zip téléchargé\n3. Activez le skill — Claude l'invoquera automatiquement quand pertinent\n\nCLAUDE CODE CLI :\n1. Déballez le fichier .zip dans ~/.claude/skills/ (créez le dossier si nécessaire)\n2. Vous obtenez ~/.claude/skills/<marque>/SKILL.md\n3. Redémarrez Claude Code — le skill apparaît dans la liste des skills disponibles"
+        },
+        "gemini_gem": {
+          "label": "Gemini — Gem",
+          "instructions": "1. Allez sur gemini.google.com → « Gems » → « Create a Gem »\n2. Collez le contenu dans le champ « Instructions »\n3. Activez la mémoire longue dans les paramètres avancés\n4. Sauvegardez et partagez avec votre équipe"
+        },
+        "universal_txt": {
+          "label": "Universel — .txt",
+          "instructions": "Format texte brut sans balises.\nCopiez le contenu et collez-le au début de n'importe quelle conversation IA (Mistral, Llama, Perplexity, etc.).\nCe format fonctionne avec tout modèle qui accepte un system prompt ou un message initial."
+        }
+      }
+    },
+    "updateBanner": {
+      "message": "Votre stratégie a été mise à jour.",
+      "close": "Fermer"
+    }
+  }
+}

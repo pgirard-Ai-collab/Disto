@@ -4,12 +4,15 @@ import { C } from '@/lib/disto';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Btn from '@/components/ui/Btn';
 import AuthBrandPanel from '@/components/layout/AuthBrandPanel';
+import LanguageToggleAuth from '@/components/i18n/LanguageToggleAuth';
 import { useState, FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
+  const t = useTranslations('auth.login');
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,11 +30,11 @@ export default function LoginPage() {
     if (authError) {
       const msg = authError.message.toLowerCase();
       if (msg.includes('invalid') || msg.includes('credentials')) {
-        setError('Courriel ou mot de passe incorrect.');
+        setError(t('errors.invalidCredentials'));
       } else if (msg.includes('banned') || msg.includes('disabled')) {
-        setError('Ce compte a été désactivé. Contactez votre administrateur.');
+        setError(t('errors.disabled'));
       } else {
-        setError('Une erreur est survenue. Veuillez réessayer.');
+        setError(t('errors.generic'));
       }
       setLoading(false);
       return;
@@ -39,7 +42,7 @@ export default function LoginPage() {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setError('Une erreur est survenue. Veuillez réessayer.');
+      setError(t('errors.generic'));
       setLoading(false);
       return;
     }
@@ -55,7 +58,7 @@ export default function LoginPage() {
     } else if (profile?.brand_slug) {
       router.push(`/${profile.brand_slug}`);
     } else {
-      setError('Aucun portail associé à ce compte. Contactez votre administrateur.');
+      setError(t('errors.noPortal'));
       setLoading(false);
     }
   }
@@ -63,13 +66,14 @@ export default function LoginPage() {
   return (
     <div
       className="login-layout"
-      style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif' }}
+      style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif', position: 'relative' }}
     >
+      <LanguageToggleAuth theme="dark" />
       <AuthBrandPanel
-        eyebrow="01 / Signal clair"
-        heroLine1="Une seule vérité"
-        heroLine2="de marque."
-        tagline="Le portail betula centralise la stratégie, le ton et le prompt système de chaque marque — pour que chaque production reste fidèle au signal."
+        eyebrow={t('eyebrow1')}
+        heroLine1={t('heroLine1')}
+        heroLine2={t('heroLine2')}
+        tagline={t('tagline')}
       />
 
       {/* RIGHT — form panel */}
@@ -85,7 +89,7 @@ export default function LoginPage() {
         }}
       >
         <form onSubmit={handleSubmit} style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}>
-          <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>02 / Connexion</Eyebrow>
+          <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>{t('eyebrow2')}</Eyebrow>
           <div style={{
             fontSize: 40,
             fontWeight: 700,
@@ -93,21 +97,21 @@ export default function LoginPage() {
             lineHeight: 1.02,
             marginBottom: 10,
           }}>
-            Entrer au portail.
+            {t('title')}
           </div>
           <div style={{ color: C.fg3, fontSize: 14, marginBottom: 40, lineHeight: 1.55 }}>
-            Nous identifions votre rôle après connexion — agence ou gardien de marque.
+            {t('subtitle')}
           </div>
 
           {/* Email */}
           <div style={{ marginBottom: 28 }}>
-            <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>Courriel</Eyebrow>
+            <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>{t('emailLabel')}</Eyebrow>
             <input
               type="email"
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="prenom.nom@agence.co"
+              placeholder={t('emailPlaceholder')}
               autoComplete="email"
               style={{
                 display: 'block',
@@ -132,7 +136,7 @@ export default function LoginPage() {
               alignItems: 'baseline',
               marginBottom: 10,
             }}>
-              <Eyebrow color={C.fg3} style={{ fontSize: 10 }}>Mot de passe</Eyebrow>
+              <Eyebrow color={C.fg3} style={{ fontSize: 10 }}>{t('passwordLabel')}</Eyebrow>
               <Link
                 href="/forgot-password"
                 style={{
@@ -144,7 +148,7 @@ export default function LoginPage() {
                   textDecoration: 'none',
                 }}
               >
-                Oublié ?
+                {t('forgot')}
               </Link>
             </div>
             <input
@@ -191,7 +195,7 @@ export default function LoginPage() {
             disabled={loading}
             style={{ width: '100%', justifyContent: 'center', padding: '16px 22px', fontSize: 13 }}
           >
-            {loading ? 'Connexion…' : 'Se connecter  →'}
+            {loading ? t('submitting') : t('submit')}
           </Btn>
 
           <div style={{
@@ -204,7 +208,7 @@ export default function LoginPage() {
             fontSize: 12,
             color: C.fg3,
           }}>
-            <span>Pas encore de compte ?</span>
+            <span>{t('noAccount')}</span>
             <button
               type="button"
               style={{
@@ -219,7 +223,7 @@ export default function LoginPage() {
                 padding: 0,
               }}
             >
-              Demander un accès →
+              {t('requestAccess')}
             </button>
           </div>
 

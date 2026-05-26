@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePassword, PASSWORD_ERRORS } from '@/lib/auth/validate-password';
+import { validatePassword } from '@/lib/auth/validate-password';
 
 describe('validatePassword', () => {
   it('retourne null pour des mots de passe valides identiques', () => {
@@ -29,10 +29,5 @@ describe('validatePassword', () => {
   it('priorité : mismatch avant too_short', () => {
     // Les deux sont courts ET différents — mismatch doit être retourné en premier
     expect(validatePassword('ab', 'cd')).toBe('mismatch');
-  });
-
-  it('PASSWORD_ERRORS contient les messages français corrects', () => {
-    expect(PASSWORD_ERRORS.mismatch).toBe('Les mots de passe ne correspondent pas.');
-    expect(PASSWORD_ERRORS.too_short).toBe('Le mot de passe doit contenir au moins 8 caractères.');
   });
 });

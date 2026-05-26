@@ -2,6 +2,7 @@
 
 import { C } from '@/lib/disto';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { disableUser } from '@/app/actions/disable-user';
 import { resendInvite } from '@/app/actions/resend-invite';
 
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function DisableUserBtn({ clientUserId, userId, userName, status, clientId }: Props) {
+  const t = useTranslations('admin.disableUser');
   const [localStatus, setLocalStatus] = useState(status);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingResend, setLoadingResend] = useState(false);
@@ -67,7 +69,7 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
           <div style={{ background: C.ink, border: `1px solid ${C.line}`, padding: '32px 40px', maxWidth: 400, width: '100%' }}>
             <div style={{ fontSize: 14, color: C.red, fontWeight: 700, marginBottom: 20 }}>{errorMsg}</div>
             <button onClick={() => setErrorMsg(null)} style={{ background: 'none', border: `1px solid ${C.line}`, color: C.bone, padding: '8px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
-              Fermer
+              {t('close')}
             </button>
           </div>
         </div>
@@ -81,17 +83,20 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
         }}>
           <div style={{ background: C.ink, border: `1px solid ${C.line}`, padding: '32px 40px', maxWidth: 400, width: '100%' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.red, marginBottom: 12 }}>
-              Désactiver le compte
+              {t('disableTitle')}
             </div>
             <div style={{ fontSize: 14, color: C.bone, lineHeight: 1.55, marginBottom: 28 }}>
-              Désactiver le compte de <strong>{userName}</strong> ? Cette action est irréversible.
+              {t.rich('disableBody', {
+                userName,
+                strong: (chunks) => <strong style={{ color: C.bone }}>{chunks}</strong>,
+              })}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={handleDisableConfirm} style={{ background: C.red, border: 'none', color: C.bone, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
-                Confirmer
+                {t('confirm')}
               </button>
               <button onClick={() => setShowDisableModal(false)} style={{ background: 'none', border: `1px solid ${C.line}`, color: C.bone, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
-                Annuler
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -106,17 +111,20 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
         }}>
           <div style={{ background: C.ink, border: `1px solid ${C.line}`, padding: '32px 40px', maxWidth: 400, width: '100%' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.cyan, marginBottom: 12 }}>
-              Renvoyer l&apos;invitation
+              {t('resendTitle')}
             </div>
             <div style={{ fontSize: 14, color: C.bone, lineHeight: 1.55, marginBottom: 28 }}>
-              Renvoyer un lien d&apos;invitation à <strong>{userName}</strong> ?
+              {t.rich('resendBody', {
+                userName,
+                strong: (chunks) => <strong style={{ color: C.bone }}>{chunks}</strong>,
+              })}
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={handleResendConfirm} style={{ background: C.black, border: 'none', color: C.bone, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
-                Renvoyer
+                {t('resendConfirm')}
               </button>
               <button onClick={() => setShowResendModal(false)} style={{ background: 'none', border: `1px solid ${C.line}`, color: C.bone, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
-                Annuler
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -126,14 +134,14 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
       {/* Action buttons */}
       {localStatus === 'disabled' ? (
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>
-          Désactivé
+          {t('disabledTag')}
         </span>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
           {localStatus === 'invited' && (
             resendDone ? (
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.cyan }}>
-                Envoyé ✓
+                {t('sentTag')}
               </span>
             ) : (
               <button
@@ -141,7 +149,7 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
                 disabled={loadingResend}
                 style={btnStyle(C.cyan, loadingResend)}
               >
-                {loadingResend ? '…' : 'Renvoyer'}
+                {loadingResend ? '…' : t('resend')}
               </button>
             )
           )}
@@ -150,7 +158,7 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
             disabled={loadingDisable}
             style={btnStyle(C.red, loadingDisable)}
           >
-            {loadingDisable ? '…' : 'Désactiver'}
+            {loadingDisable ? '…' : t('disable')}
           </button>
         </div>
       )}

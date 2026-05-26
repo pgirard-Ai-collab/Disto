@@ -1,4 +1,7 @@
+'use client';
+
 import { C } from '@/lib/disto';
+import { useTranslations } from 'next-intl';
 import Eyebrow from '@/components/ui/Eyebrow';
 
 interface AuthBrandPanelProps {
@@ -9,6 +12,7 @@ interface AuthBrandPanelProps {
 }
 
 export default function AuthBrandPanel({ eyebrow, heroLine1, heroLine2, tagline }: AuthBrandPanelProps) {
+  const tCommon = useTranslations('common');
   return (
     <div
       className="login-brand-panel"
@@ -27,7 +31,7 @@ export default function AuthBrandPanel({ eyebrow, heroLine1, heroLine2, tagline 
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
         <span style={{ color: C.red, fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em' }}>DISTO.</span>
-        <Eyebrow color={C.fg3} style={{ fontSize: 11 }}>Brand OS</Eyebrow>
+        <Eyebrow color={C.fg3} style={{ fontSize: 11 }}>{tCommon('brandOs')}</Eyebrow>
       </div>
 
       <div>
@@ -56,9 +60,9 @@ export default function AuthBrandPanel({ eyebrow, heroLine1, heroLine2, tagline 
         textTransform: 'uppercase',
         color: C.muted,
       }}>
-        <span>betula × disto</span>
-        <span>— Édition 2026 —</span>
-        <span>Québec / MTL</span>
+        <span>{tCommon('betulaDisto')}</span>
+        <span>{tCommon('edition')}</span>
+        <span>{tCommon('city')}</span>
       </div>
     </div>
   );

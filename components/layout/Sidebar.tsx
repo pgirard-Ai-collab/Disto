@@ -4,6 +4,7 @@ import { C } from '@/lib/disto';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import Eyebrow from '@/components/ui/Eyebrow';
 
 type SidebarVariant = 'agency' | 'client';
@@ -22,31 +23,9 @@ interface SidebarContentProps {
   isActive: (href: string) => boolean;
 }
 
-const agencyItems = (clientId?: string, hasPublishedVersion?: boolean) => {
-  const items = [
-    { id: 'clients', n: '01', label: 'Clients', href: '/clients' },
-  ];
-  if (clientId) {
-    items.push(
-      { id: 'import', n: '02', label: 'Import Disto',         href: `/clients/${clientId}/import` },
-      { id: 'editor', n: '03', label: 'Éditeur de structure', href: `/clients/${clientId}/editor` },
-      { id: 'access', n: '04', label: 'Accès',                href: `/clients/${clientId}/access` },
-    );
-    if (hasPublishedVersion) {
-      items.push({ id: 'system-prompt', n: '05', label: 'System Prompt', href: `/clients/${clientId}/system-prompt` });
-    }
-  }
-  return items;
-};
-
-const clientItems = (brand: string) => [
-  { id: 'dashboard', n: '01', label: 'Dashboard',            href: `/${brand}` },
-  { id: 'strategie', n: '02', label: 'Stratégie',            href: `/${brand}/strategie` },
-  { id: 'chat',      n: '03', label: 'Interroger la marque', href: `/${brand}/chat` },
-  { id: 'export',    n: '04', label: 'System Prompt',        href: `/${brand}/export` },
-];
-
 function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps) {
+  const tCommon = useTranslations('common');
+  const tSidebar = useTranslations('sidebar');
   return (
     <aside className="sidebar" style={{
       width: 256,
@@ -70,23 +49,23 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
         <span style={{ color: C.red, fontWeight: 700, fontSize: 22, letterSpacing: '-0.03em' }}>
           DISTO.
         </span>
-        <Eyebrow color={C.muted} style={{ fontSize: 10 }}>Brand OS</Eyebrow>
+        <Eyebrow color={C.muted} style={{ fontSize: 10 }}>{tCommon('brandOs')}</Eyebrow>
       </div>
 
       {/* Tenant block */}
       <div style={{ padding: '20px 24px 18px', borderBottom: `1px solid ${C.line}` }}>
         <Eyebrow color={C.muted} style={{ fontSize: 10, marginBottom: 8 }}>
-          {variant === 'agency' ? 'Agence' : 'Marque'}
+          {variant === 'agency' ? tSidebar('agency') : tSidebar('brand')}
         </Eyebrow>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            {variant === 'agency' ? 'betula' : brand}
+            {variant === 'agency' ? tCommon('brandActor') : brand}
           </div>
           <span style={{ color: C.fg3, fontSize: 12 }}>⌄</span>
         </div>
         {variant === 'client' && (
           <div style={{ color: C.fg3, fontSize: 11, marginTop: 4, letterSpacing: '0.04em' }}>
-            Centre de thermothérapie
+            {tCommon('brandActorTagline')}
           </div>
         )}
       </div>
@@ -94,7 +73,7 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
       {/* Nav */}
       <nav style={{ padding: '20px 0', flex: 1, overflowY: 'auto' }}>
         <Eyebrow color={C.muted} style={{ padding: '0 24px', marginBottom: 10, fontSize: 10 }}>
-          {variant === 'agency' ? 'Console agence' : 'Portail marque'}
+          {variant === 'agency' ? tSidebar('agencyConsole') : tSidebar('brandPortal')}
         </Eyebrow>
         {items.map(it => {
           const on = isActive(it.href);
@@ -145,7 +124,7 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
       }}>
         <span>v 1.4.0</span>
         <span>·</span>
-        <span>Signal clair</span>
+        <span>{tCommon('brandFooter')}</span>
       </div>
     </aside>
   );
@@ -154,9 +133,36 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
 export default function Sidebar({ variant = 'agency', brand, clientId, hasPublishedVersion }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const tSidebar = useTranslations('sidebar');
+  const tCommon = useTranslations('common');
 
   const resolvedBrand = brand ?? 'SARTIGA';
-  const items = variant === 'agency' ? agencyItems(clientId, hasPublishedVersion) : clientItems(resolvedBrand);
+
+  const agencyItems = (() => {
+    const items = [
+      { id: 'clients', n: '01', label: tSidebar('agency_clients'), href: '/clients' },
+    ];
+    if (clientId) {
+      items.push(
+        { id: 'import', n: '02', label: tSidebar('agency_import'), href: `/clients/${clientId}/import` },
+        { id: 'editor', n: '03', label: tSidebar('agency_editor'), href: `/clients/${clientId}/editor` },
+        { id: 'access', n: '04', label: tSidebar('agency_access'), href: `/clients/${clientId}/access` },
+      );
+      if (hasPublishedVersion) {
+        items.push({ id: 'system-prompt', n: '05', label: tSidebar('agency_systemPrompt'), href: `/clients/${clientId}/system-prompt` });
+      }
+    }
+    return items;
+  })();
+
+  const clientItems = [
+    { id: 'dashboard', n: '01', label: tSidebar('client_dashboard'), href: `/${resolvedBrand}` },
+    { id: 'strategie', n: '02', label: tSidebar('client_strategie'), href: `/${resolvedBrand}/strategie` },
+    { id: 'chat',      n: '03', label: tSidebar('client_chat'),      href: `/${resolvedBrand}/chat` },
+    { id: 'export',    n: '04', label: tSidebar('client_systemPrompt'), href: `/${resolvedBrand}/export` },
+  ];
+
+  const items = variant === 'agency' ? agencyItems : clientItems;
   const exactRoots = new Set<string>(['/', `/${resolvedBrand}`, '/clients']);
   const isActive = (href: string) => {
     if (exactRoots.has(href)) return pathname === href;
@@ -187,7 +193,7 @@ export default function Sidebar({ variant = 'agency', brand, clientId, hasPublis
             padding: 4,
             lineHeight: 1,
           }}
-          aria-label="Menu"
+          aria-label={tSidebar('menuLabel')}
         >
           ☰
         </button>
@@ -195,7 +201,7 @@ export default function Sidebar({ variant = 'agency', brand, clientId, hasPublis
           DISTO.
         </span>
         <span style={{ marginLeft: 'auto', fontSize: 13, color: C.fg3, fontWeight: 700 }}>
-          {variant === 'agency' ? 'betula' : resolvedBrand}
+          {variant === 'agency' ? tCommon('brandActor') : resolvedBrand}
         </span>
       </div>
 

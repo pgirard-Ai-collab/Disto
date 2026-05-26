@@ -2,9 +2,9 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { C } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
-import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
-import SectionHead from '@/components/ui/SectionHead';
+import I18nTopBar from '@/components/i18n/I18nTopBar';
+import I18nSectionHead from '@/components/i18n/I18nSectionHead';
 import { hasPublishedStructure } from '@/lib/has-published';
 import ImportPanel from './ImportPanel';
 
@@ -28,7 +28,6 @@ export default async function ImportPage({ params }: { params: Promise<{ id: str
     .limit(1)
     .maybeSingle();
 
-  // Resume any in-flight or recently-completed job so progress survives reloads
   const { data: activeJob } = await supabase
     .from('ingestion_jobs')
     .select('id, status, steps, error')
@@ -43,17 +42,18 @@ export default async function ImportPage({ params }: { params: Promise<{ id: str
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
       <Sidebar variant="agency" clientId={id} hasPublishedVersion={hasPublished} />
       <div className="portal-main">
-        <TopBar
+        <I18nTopBar
           theme="light"
-          crumbs={['betula', 'Clients', client.brand_name, 'Import Disto']}
+          crumbKeys={['crumbs.betula', 'crumbs.clients', 'crumbs.brand', 'crumbs.import']}
+          crumbValues={{ 'crumbs.brand': { name: client.brand_name } }}
           right={<UserMenu theme="light" />}
         />
         <div className="portal-scroll" style={{ padding: '32px 40px 40px' }}>
-          <SectionHead
+          <I18nSectionHead
             num="02"
-            eyebrow={`${client.brand_name} · Import Disto`}
-            title="Import Disto."
-            subtitle="Déposez le document brand du client. Nous extrayons, nous structurons, vous validez."
+            eyebrowKey="admin.import.title"
+            titleKey="admin.import.heading"
+            subtitleKey="admin.import.subtitle"
           />
           <ImportPanel
             clientId={client.id}

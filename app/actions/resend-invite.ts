@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
 export type ResendInviteResult =
@@ -12,26 +13,28 @@ export async function resendInvite(
   userId: string,
   clientId: string,
 ): Promise<ResendInviteResult> {
+  const t = await getTranslations('serverActions.errors');
+
   if (!clientUserId || !userId || !clientId) {
-    return { success: false, error: 'Identifiants manquants.' };
+    return { success: false, error: t('missingIds') };
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Non authentifié.' };
+  if (!user) return { success: false, error: t('unauthenticated') };
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single();
-  if (profile?.role !== 'agency_admin') return { success: false, error: 'Accès refusé.' };
+  if (profile?.role !== 'agency_admin') return { success: false, error: t('accessDenied') };
 
   const admin = await createAdminClient();
 
   const { data: { user: targetUser }, error: getUserError } = await admin.auth.admin.getUserById(userId);
   if (getUserError || !targetUser?.email) {
-    return { success: false, error: 'Utilisateur introuvable.' };
+    return { success: false, error: t('userNotFound') };
   }
 
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
@@ -43,11 +46,10 @@ export async function resendInvite(
 
   if (inviteError) {
     if (!inviteError.message.toLowerCase().includes('already')) {
-      return { success: false, error: "Impossible de renvoyer l'invitation. Veuillez réessayer." };
+      return { success: false, error: t('resendFailed') };
     }
 
     // User already has an auth account — send a password reset email pointing to /set-password.
-    // resetPasswordForEmail actually sends the email, unlike generateLink which only returns the link.
     const { error: resetError } = await admin.auth.resetPasswordForEmail(
       targetUser.email,
       { redirectTo },
@@ -55,9 +57,9 @@ export async function resendInvite(
 
     if (resetError) {
       if (resetError.message.toLowerCase().includes('rate limit') || resetError.message.includes('seconds')) {
-        return { success: false, error: 'Trop de tentatives. Patientez une minute avant de réessayer.' };
+        return { success: false, error: t('rateLimit') };
       }
-      return { success: false, error: "Impossible de renvoyer l'invitation. Veuillez réessayer." };
+      return { success: false, error: t('resendFailed') };
     }
   }
 

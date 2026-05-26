@@ -39,10 +39,3 @@ export const PILL_MAP: Record<PillKind, { bg: string; fg: string; dot: string }>
   default:   { bg: 'rgba(0,0,0,0.05)',       fg: C.muted,     dot: C.muted },
 };
 
-export const STATUS_LABEL: Record<string, string> = {
-  active:   'Actif',
-  invited:  'Invité',
-  disabled: 'Désactivé',
-  draft:    'Brouillon',
-  archived: 'Archivé',
-};

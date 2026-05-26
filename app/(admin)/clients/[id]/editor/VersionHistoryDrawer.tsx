@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { C, PillKind } from '@/lib/disto';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
@@ -24,55 +25,63 @@ const STATUS_TO_PILL: Record<VersionListEntry['status'], PillKind> = {
   archived: 'archived',
 };
 
-const STATUS_LABEL: Record<VersionListEntry['status'], string> = {
-  draft: 'Brouillon',
-  published: 'Publiée',
-  modified: 'Modifiée',
-  archived: 'Archivée',
+type SectionI18nKey =
+  | 'identity' | 'mission' | 'intention' | 'archetype'
+  | 'valueProposition' | 'positioning' | 'tone' | 'personas'
+  | 'keyMessages' | 'manifesto' | 'competitiveContext' | 'values'
+  | 'alwaysSay' | 'neverSay';
+
+const SECTION_I18N: Record<string, SectionI18nKey> = {
+  brand_identity: 'identity',
+  mission: 'mission',
+  brand_intention: 'intention',
+  archetype: 'archetype',
+  value_proposition: 'valueProposition',
+  positioning: 'positioning',
+  tone_of_voice: 'tone',
+  personas: 'personas',
+  key_messages: 'keyMessages',
+  manifesto: 'manifesto',
+  competitive_context: 'competitiveContext',
+  brand_values: 'values',
+  always_say: 'alwaysSay',
+  dont_say: 'neverSay',
 };
-
-const SECTION_NAMES: Record<string, string> = {
-  brand_identity: 'Identité',
-  mission: 'Mission',
-  brand_intention: 'Intention',
-  archetype: 'Archétype',
-  value_proposition: 'Value Proposition',
-  positioning: 'Positionnement',
-  tone_of_voice: 'Ton',
-  personas: 'Personas',
-  key_messages: 'Messages clés',
-  manifesto: 'Manifeste',
-  competitive_context: 'Contexte concurrentiel',
-  brand_values: 'Valeurs',
-  always_say: 'Toujours dire',
-  dont_say: 'Ne jamais dire',
-};
-
-function formatRelative(iso: string): string {
-  const then = new Date(iso).getTime();
-  const now = Date.now();
-  const diffMs = now - then;
-  const sec = Math.round(diffMs / 1000);
-  if (sec < 60) return 'à l\'instant';
-  const min = Math.round(sec / 60);
-  if (min < 60) return `il y a ${min} min`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `il y a ${hr} h`;
-  const days = Math.round(hr / 24);
-  if (days < 30) return `il y a ${days} j`;
-  const months = Math.round(days / 30);
-  if (months < 12) return `il y a ${months} mois`;
-  return `il y a ${Math.round(months / 12)} an${months >= 24 ? 's' : ''}`;
-}
-
-function formatAbsolute(iso: string): string {
-  return new Date(iso).toLocaleString('fr-CA', {
-    year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
 
 export default function VersionHistoryDrawer({ clientId, open, onClose }: Props) {
+  const t = useTranslations('admin.versionHistory');
+  const tCommon = useTranslations('common');
+  const tSection = useTranslations('admin.editor.section');
+  const locale = useLocale();
+  const dateLocale = locale === 'fr' ? 'fr-CA' : 'en-CA';
+
+  // Anchor "now" to first render so formatRelative stays pure (lazy useState
+  // init runs once outside the render path — Date.now() in render trips the
+  // React Compiler lint rule otherwise).
+  const [now] = useState(() => Date.now());
+
+  const formatRelative = (iso: string): string => {
+    const then = new Date(iso).getTime();
+    const diffMs = now - then;
+    const sec = Math.round(diffMs / 1000);
+    if (sec < 60) return t('relative.now');
+    const min = Math.round(sec / 60);
+    if (min < 60) return t('relative.minutes', { n: min });
+    const hr = Math.round(min / 60);
+    if (hr < 24) return t('relative.hours', { n: hr });
+    const days = Math.round(hr / 24);
+    if (days < 30) return t('relative.days', { n: days });
+    const months = Math.round(days / 30);
+    if (months < 12) return t('relative.months', { n: months });
+    const years = Math.round(months / 12);
+    return years === 1 ? t('relative.yearsSingular', { n: years }) : t('relative.yearsPlural', { n: years });
+  };
+  const formatAbsolute = (iso: string): string =>
+    new Date(iso).toLocaleString(dateLocale, {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+
   const [versions, setVersions] = useState<VersionListEntry[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -119,10 +128,14 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
         setRestoreError(res.error);
         return;
       }
-      // Force a full refresh so the editor reloads with the new current version
       window.location.reload();
     });
   }
+
+  const sectionLabel = (key: string): string => {
+    const i18nKey = SECTION_I18N[key];
+    return i18nKey ? tSection(i18nKey) : key;
+  };
 
   return (
     <>
@@ -147,14 +160,14 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
           padding: '20px 24px', borderBottom: `1px solid ${C.border1}`,
         }}>
           <div>
-            <Eyebrow color={C.muted}>Historique</Eyebrow>
+            <Eyebrow color={C.muted}>{t('title')}</Eyebrow>
             <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', marginTop: 2 }}>
-              {selected ? `Version ${selected.version}` : 'Versions précédentes'}
+              {selected ? t('subtitleVersion', { version: selected.version }) : t('subtitlePrevious')}
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={tCommon('close')}
             style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
               fontSize: 24, color: C.muted, lineHeight: 1, padding: 4,
@@ -170,12 +183,12 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
           )}
 
           {!versions && !loadError && (
-            <div style={{ padding: 24, color: C.muted, fontSize: 13 }}>Chargement…</div>
+            <div style={{ padding: 24, color: C.muted, fontSize: 13 }}>{t('loading')}</div>
           )}
 
           {versions && versions.length <= 1 && !selected && (
             <div style={{ padding: 24, color: C.muted, fontSize: 13, lineHeight: 1.6 }}>
-              Aucune version précédente. L&apos;historique s&apos;enrichira à chaque sauvegarde.
+              {t('empty')}
             </div>
           )}
 
@@ -201,7 +214,7 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
                         <span style={{ fontSize: 15, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
                           v{v.version}
                         </span>
-                        <Pill kind={STATUS_TO_PILL[v.status]} dot>{STATUS_LABEL[v.status]}</Pill>
+                        <Pill kind={STATUS_TO_PILL[v.status]} dot>{t(`status.${v.status}`)}</Pill>
                       </div>
                       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.55 }}>
                         <span title={formatAbsolute(v.created_at)}>{formatRelative(v.created_at)}</span>
@@ -210,17 +223,17 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
                       <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                         {v.is_current && (
                           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.red, background: 'rgba(240,45,20,0.08)', padding: '3px 8px' }}>
-                            Version courante
+                            {t('current')}
                           </span>
                         )}
                         {v.status === 'published' && (
                           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.muted, background: 'rgba(0,0,0,0.05)', padding: '3px 8px' }}>
-                            Publiée (visible client)
+                            {t('publishedTag')}
                           </span>
                         )}
                         {v.restored_from_version != null && (
                           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.muted, background: 'rgba(0,0,0,0.05)', padding: '3px 8px' }}>
-                            Restaurée de v{v.restored_from_version}
+                            {t('restoredFrom', { version: v.restored_from_version })}
                           </span>
                         )}
                       </div>
@@ -241,30 +254,30 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
                   color: C.muted, padding: 0, marginBottom: 18,
                 }}
               >
-                ← Retour à la liste
+                {t('backToList')}
               </button>
 
               <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${C.border1}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <Pill kind={STATUS_TO_PILL[selected.status]} dot>{STATUS_LABEL[selected.status]}</Pill>
+                  <Pill kind={STATUS_TO_PILL[selected.status]} dot>{t(`status.${selected.status}`)}</Pill>
                 </div>
                 <div style={{ fontSize: 12, color: C.muted }}>
                   {formatAbsolute(selected.created_at)}
                   {selected.created_by_email && <> · {selected.created_by_email}</>}
-                  {selected.restored_from_version != null && <> · Restaurée de v{selected.restored_from_version}</>}
+                  {selected.restored_from_version != null && <> · {t('restoredFrom', { version: selected.restored_from_version })}</>}
                 </div>
               </div>
 
               {Object.keys(selected.sections).length === 0 && (
-                <div style={{ color: C.muted, fontSize: 13 }}>Aucun contenu dans cette version.</div>
+                <div style={{ color: C.muted, fontSize: 13 }}>{t('emptyContent')}</div>
               )}
               {Object.entries(selected.sections).map(([key, content]) => (
                 <div key={key} style={{ marginBottom: 18 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.muted, marginBottom: 6 }}>
-                    {SECTION_NAMES[key] ?? key}
+                    {sectionLabel(key)}
                   </div>
                   <div style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap', color: content?.trim() ? C.black : C.muted, fontStyle: content?.trim() ? 'normal' : 'italic' }}>
-                    {content?.trim() ? content : '(vide)'}
+                    {content?.trim() ? content : t('emptySection')}
                   </div>
                 </div>
               ))}
@@ -275,7 +288,7 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
         {selected && (
           <footer style={{ padding: '16px 24px', borderTop: `1px solid ${C.border1}`, display: 'flex', justifyContent: 'flex-end' }}>
             <Btn variant="primary" size="sm" onClick={() => setConfirmId(selected.id)}>
-              Restaurer cette version →
+              {t('restoreThisVersion')}
             </Btn>
           </footer>
         )}
@@ -288,20 +301,20 @@ export default function VersionHistoryDrawer({ clientId, open, onClose }: Props)
         }}>
           <div style={{ background: C.bone, padding: '36px 40px', maxWidth: 460, width: 'calc(100% - 32px)' }}>
             <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.015em', marginBottom: 10 }}>
-              Restaurer la version {confirmTarget.version} ?
+              {t('restoreConfirmTitle', { version: confirmTarget.version })}
             </div>
             <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginBottom: 24 }}>
-              Du {formatAbsolute(confirmTarget.created_at)}. Une nouvelle version sera créée et publiée immédiatement. Le client verra le nouveau contenu sous quelques secondes.
+              {t('restoreConfirmBody', { date: formatAbsolute(confirmTarget.created_at) })}
             </div>
             {restoreError && (
               <div style={{ color: C.red, fontSize: 13, marginBottom: 14 }}>{restoreError}</div>
             )}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <Btn variant="ghost" size="sm" onClick={() => { setConfirmId(null); setRestoreError(null); }} disabled={isPending}>
-                Annuler
+                {tCommon('cancel')}
               </Btn>
               <Btn variant="primary" size="sm" onClick={() => handleRestore(confirmTarget.id)} disabled={isPending}>
-                {isPending ? 'Restauration…' : 'Restaurer et publier'}
+                {isPending ? t('restoring') : t('restore')}
               </Btn>
             </div>
           </div>

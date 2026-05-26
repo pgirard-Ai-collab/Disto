@@ -4,12 +4,16 @@ import { C } from '@/lib/disto';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Btn from '@/components/ui/Btn';
 import AuthBrandPanel from '@/components/layout/AuthBrandPanel';
+import LanguageToggleAuth from '@/components/i18n/LanguageToggleAuth';
 import { useState, useEffect, FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
-import { validatePassword, PASSWORD_ERRORS } from '@/lib/auth/validate-password';
+import { validatePassword } from '@/lib/auth/validate-password';
 
 export default function UpdatePasswordPage() {
+  const t = useTranslations('auth.updatePassword');
+  const tPw = useTranslations('auth.password.errors');
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -23,16 +27,16 @@ export default function UpdatePasswordPage() {
       if (user) {
         setSessionReady(true);
       } else {
-        setError('Lien invalide ou expiré. Veuillez recommencer depuis « Mot de passe oublié ».');
+        setError(t('errors.invalid'));
       }
     });
-  }, []);
+  }, [t]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const validationError = validatePassword(password, confirm);
     if (validationError) {
-      setError(PASSWORD_ERRORS[validationError]);
+      setError(tPw(validationError));
       return;
     }
     setError(null);
@@ -42,7 +46,7 @@ export default function UpdatePasswordPage() {
     const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
-      setError('Impossible de mettre à jour le mot de passe. Veuillez réessayer.');
+      setError(t('errors.generic'));
       setLoading(false);
       return;
     }
@@ -53,13 +57,14 @@ export default function UpdatePasswordPage() {
   return (
     <div
       className="login-layout"
-      style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif' }}
+      style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif', position: 'relative' }}
     >
+      <LanguageToggleAuth theme="dark" />
       <AuthBrandPanel
-        eyebrow="01 / Sécurité"
-        heroLine1="Nouveau"
-        heroLine2="mot de passe."
-        tagline="Choisissez un mot de passe fort pour sécuriser votre accès."
+        eyebrow={t('eyebrow1')}
+        heroLine1={t('heroLine1')}
+        heroLine2={t('heroLine2')}
+        tagline={t('tagline')}
       />
 
       {/* RIGHT — form panel */}
@@ -71,16 +76,16 @@ export default function UpdatePasswordPage() {
         }}
       >
         <form onSubmit={handleSubmit} style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}>
-          <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>02 / Nouveau mot de passe</Eyebrow>
-          <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.02, marginBottom: 10 }}>
-            Choisir un nouveau<br />mot de passe.
+          <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>{t('eyebrow2')}</Eyebrow>
+          <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.02, marginBottom: 10, whiteSpace: 'pre-line' }}>
+            {t('title')}
           </div>
           <div style={{ color: C.fg3, fontSize: 14, marginBottom: 40, lineHeight: 1.55 }}>
-            Minimum 8 caractères. Vous serez redirigé vers la connexion après.
+            {t('subtitle')}
           </div>
 
           <div style={{ marginBottom: 28 }}>
-            <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>Nouveau mot de passe</Eyebrow>
+            <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>{t('newPasswordLabel')}</Eyebrow>
             <input
               type="password"
               required
@@ -101,7 +106,7 @@ export default function UpdatePasswordPage() {
           </div>
 
           <div style={{ marginBottom: 40 }}>
-            <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>Confirmer le mot de passe</Eyebrow>
+            <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>{t('confirmPasswordLabel')}</Eyebrow>
             <input
               type="password"
               required
@@ -138,7 +143,7 @@ export default function UpdatePasswordPage() {
             disabled={loading || !sessionReady}
             style={{ width: '100%', justifyContent: 'center', padding: '16px 22px', fontSize: 13 }}
           >
-            {loading ? 'Mise à jour…' : 'Mettre à jour  →'}
+            {loading ? t('submitting') : t('submit')}
           </Btn>
         </form>
       </div>

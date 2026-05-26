@@ -4,11 +4,14 @@ import { C } from '@/lib/disto';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Btn from '@/components/ui/Btn';
 import AuthBrandPanel from '@/components/layout/AuthBrandPanel';
+import LanguageToggleAuth from '@/components/i18n/LanguageToggleAuth';
 import { useState, FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/browser';
 import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth.forgot');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent'>('idle');
 
@@ -28,13 +31,14 @@ export default function ForgotPasswordPage() {
   return (
     <div
       className="login-layout"
-      style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif' }}
+      style={{ background: C.black, color: C.bone, fontFamily: 'Archivo, sans-serif', position: 'relative' }}
     >
+      <LanguageToggleAuth theme="dark" />
       <AuthBrandPanel
-        eyebrow="01 / Récupération"
-        heroLine1="Retrouver"
-        heroLine2="l'accès."
-        tagline="Entrez votre adresse courriel et nous vous enverrons un lien pour réinitialiser votre mot de passe."
+        eyebrow={t('eyebrow1')}
+        heroLine1={t('heroLine1')}
+        heroLine2={t('heroLine2')}
+        tagline={t('tagline')}
       />
 
       {/* RIGHT — form panel */}
@@ -46,40 +50,43 @@ export default function ForgotPasswordPage() {
         }}
       >
         <div style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}>
-          <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>02 / Mot de passe oublié</Eyebrow>
+          <Eyebrow color={C.fg3} style={{ marginBottom: 18 }}>{t('eyebrow2')}</Eyebrow>
 
           {status === 'sent' ? (
             <>
               <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.02, marginBottom: 20 }}>
-                Courriel envoyé.
+                {t('successTitle')}
               </div>
               <div style={{ color: C.fg3, fontSize: 14, lineHeight: 1.55, marginBottom: 40 }}>
-                Si un compte existe pour <strong style={{ color: C.bone }}>{email}</strong>, vous recevrez un lien de réinitialisation dans les prochaines minutes.
+                {t.rich('successBody', {
+                  email,
+                  strong: (chunks) => <strong style={{ color: C.bone }}>{chunks}</strong>,
+                })}
               </div>
               <Link href="/login" style={{
                 fontSize: 12, fontWeight: 700, letterSpacing: '0.12em',
                 textTransform: 'uppercase', color: C.cyan, textDecoration: 'none',
               }}>
-                ← Retour à la connexion
+                {t('back')}
               </Link>
             </>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.02, marginBottom: 10 }}>
-                Réinitialiser le<br />mot de passe.
+              <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.02, marginBottom: 10, whiteSpace: 'pre-line' }}>
+                {t('title')}
               </div>
               <div style={{ color: C.fg3, fontSize: 14, marginBottom: 40, lineHeight: 1.55 }}>
-                Entrez votre adresse courriel associée à votre compte.
+                {t('subtitle')}
               </div>
 
               <div style={{ marginBottom: 40 }}>
-                <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>Courriel</Eyebrow>
+                <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 10 }}>{t('emailLabel')}</Eyebrow>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="prenom.nom@marque.co"
+                  placeholder={t('emailPlaceholder')}
                   autoComplete="email"
                   style={{
                     display: 'block', width: '100%',
@@ -97,14 +104,14 @@ export default function ForgotPasswordPage() {
                 disabled={status === 'loading'}
                 style={{ width: '100%', justifyContent: 'center', padding: '16px 22px', fontSize: 13, marginBottom: 24 }}
               >
-                {status === 'loading' ? 'Envoi…' : 'Envoyer le lien  →'}
+                {status === 'loading' ? t('submitting') : t('submit')}
               </Btn>
 
               <Link href="/login" style={{
                 fontSize: 12, fontWeight: 700, letterSpacing: '0.12em',
                 textTransform: 'uppercase', color: C.fg3, textDecoration: 'none',
               }}>
-                ← Retour à la connexion
+                {t('back')}
               </Link>
             </form>
           )}

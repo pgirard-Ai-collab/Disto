@@ -4,11 +4,13 @@ import { C } from '@/lib/disto';
 import Eyebrow from '@/components/ui/Eyebrow';
 import Btn from '@/components/ui/Btn';
 import { useState, FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { inviteUser } from '@/app/actions/invite-user';
 
 type Role = 'client_admin' | 'client_reader';
 
 export default function InviteForm({ clientId }: { clientId: string }) {
+  const t = useTranslations('admin.inviteForm');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('client_admin');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -23,7 +25,7 @@ export default function InviteForm({ clientId }: { clientId: string }) {
 
     if (result.success) {
       setStatus('success');
-      setMessage(`Invitation envoyée à ${email}.`);
+      setMessage(t('success', { email }));
       setEmail('');
     } else {
       setStatus('error');
@@ -38,9 +40,9 @@ export default function InviteForm({ clientId }: { clientId: string }) {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
     }}>
       <div>
-        <Eyebrow color={C.red} style={{ marginBottom: 8 }}>Nouvelle invitation</Eyebrow>
+        <Eyebrow color={C.red} style={{ marginBottom: 8 }}>{t('title')}</Eyebrow>
         <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>
-          Ajouter un gardien de marque.
+          {t('subtitle')}
         </div>
       </div>
       <form
@@ -48,13 +50,13 @@ export default function InviteForm({ clientId }: { clientId: string }) {
         style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flex: 1, maxWidth: 720, marginLeft: 40, flexWrap: 'wrap' }}
       >
         <div style={{ flex: 2, minWidth: 180 }}>
-          <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 6 }}>Courriel</Eyebrow>
+          <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 6 }}>{t('emailLabel')}</Eyebrow>
           <input
             type="email"
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder="prenom.nom@marque.co"
+            placeholder={t('emailPlaceholder')}
             style={{
               display: 'block', width: '100%',
               background: 'transparent', border: 'none',
@@ -66,7 +68,7 @@ export default function InviteForm({ clientId }: { clientId: string }) {
           />
         </div>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 6 }}>Rôle</Eyebrow>
+          <Eyebrow color={C.fg3} style={{ fontSize: 10, marginBottom: 6 }}>{t('roleLabel')}</Eyebrow>
           <div style={{ display: 'flex', gap: 0, border: `1px solid ${C.line2}` }}>
             <button
               type="button"
@@ -78,7 +80,7 @@ export default function InviteForm({ clientId }: { clientId: string }) {
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase',
                 border: 'none', cursor: 'pointer',
               }}
-            >Admin</button>
+            >{t('roleAdmin')}</button>
             <button
               type="button"
               onClick={() => setRole('client_reader')}
@@ -91,7 +93,7 @@ export default function InviteForm({ clientId }: { clientId: string }) {
                 borderLeftWidth: 1, borderLeftStyle: 'solid', borderLeftColor: C.line2,
                 cursor: 'pointer',
               }}
-            >Lecteur</button>
+            >{t('roleReader')}</button>
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
@@ -101,7 +103,7 @@ export default function InviteForm({ clientId }: { clientId: string }) {
             size="md"
             disabled={status === 'loading'}
           >
-            {status === 'loading' ? 'Envoi…' : 'Envoyer  →'}
+            {status === 'loading' ? t('sending') : t('submit')}
           </Btn>
           {message && (
             <span style={{

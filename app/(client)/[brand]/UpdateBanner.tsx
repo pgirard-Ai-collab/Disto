@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { C } from '@/lib/disto';
 
 type Props = {
@@ -15,6 +16,7 @@ function storageKey(brandSlug: string) {
 }
 
 export default function UpdateBanner({ brandSlug, publishedAt }: Props) {
+  const t = useTranslations('client.updateBanner');
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -25,11 +27,9 @@ export default function UpdateBanner({ brandSlug, publishedAt }: Props) {
     try {
       lastSeen = window.localStorage.getItem(key);
     } catch {
-      // localStorage unavailable (private mode, etc.) — give up silently
       return;
     }
 
-    // First visit: initialise without showing
     if (!lastSeen) {
       try { window.localStorage.setItem(key, publishedAt); } catch { /* ignore */ }
       return;
@@ -37,10 +37,9 @@ export default function UpdateBanner({ brandSlug, publishedAt }: Props) {
 
     if (new Date(publishedAt).getTime() > new Date(lastSeen).getTime()) {
       setVisible(true);
-      // Persist immediately so the banner won't reappear on the next navigation
       try { window.localStorage.setItem(key, publishedAt); } catch { /* ignore */ }
-      const t = setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
+      return () => clearTimeout(timer);
     }
   }, [brandSlug, publishedAt]);
 
@@ -62,12 +61,12 @@ export default function UpdateBanner({ brandSlug, publishedAt }: Props) {
     >
       <span aria-hidden style={{ color: C.cyan, fontWeight: 700 }}>ⓘ</span>
       <span style={{ flex: 1 }}>
-        Votre stratégie a été mise à jour.
+        {t('message')}
       </span>
       <button
         type="button"
         onClick={() => setVisible(false)}
-        aria-label="Fermer"
+        aria-label={t('close')}
         style={{
           background: 'transparent', border: 'none', cursor: 'pointer',
           color: C.boneDim, fontSize: 18, lineHeight: 1, padding: 4,

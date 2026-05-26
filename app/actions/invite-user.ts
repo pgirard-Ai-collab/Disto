@@ -1,5 +1,6 @@
 'use server';
 
+import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
 export type InviteUserResult =
@@ -11,25 +12,26 @@ export async function inviteUser(
   role: 'client_admin' | 'client_reader',
   clientId: string,
 ): Promise<InviteUserResult> {
+  const t = await getTranslations('serverActions.errors');
+
   if (!email || !role || !clientId) {
-    return { success: false, error: 'Tous les champs sont requis.' };
+    return { success: false, error: t('missingFields') };
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'Non authentifié.' };
+  if (!user) return { success: false, error: t('unauthenticated') };
 
   const { data: callerProfile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single();
-  if (callerProfile?.role !== 'agency_admin') return { success: false, error: 'Accès refusé.' };
+  if (callerProfile?.role !== 'agency_admin') return { success: false, error: t('accessDenied') };
 
-  // Resolve client to get slug
   const admin = await createAdminClient();
   const { data: client } = await admin.from('clients').select('id, slug').eq('id', clientId).single();
-  if (!client) return { success: false, error: 'Client introuvable.' };
+  if (!client) return { success: false, error: t('clientNotFound') };
 
   const brandRole = role === 'client_admin' ? 'client_admin' : 'client_reader';
   const clientRole = role === 'client_admin' ? 'admin' : 'reader';
@@ -39,29 +41,27 @@ export async function inviteUser(
 
   if (inviteError) {
     if (inviteError.message.includes('already registered')) {
-      return { success: false, error: 'Un compte existe déjà pour cette adresse.' };
+      return { success: false, error: t('emailExists') };
     }
-    return { success: false, error: "Impossible d'envoyer l'invitation. Veuillez réessayer." };
+    return { success: false, error: t('inviteFailed') };
   }
 
-  // Create profile
   const { error: profileError } = await admin
     .from('profiles')
     .upsert({ id: data.user.id, role: brandRole, brand_slug: client.slug });
 
   if (profileError) {
     await admin.auth.admin.deleteUser(data.user.id);
-    return { success: false, error: 'Erreur lors de la création du profil. Veuillez réessayer.' };
+    return { success: false, error: t('profileCreate') };
   }
 
-  // Create client_users row
   const { error: cuError } = await admin
     .from('client_users')
     .upsert({ client_id: clientId, user_id: data.user.id, role: clientRole, status: 'invited' });
 
   if (cuError) {
     await admin.auth.admin.deleteUser(data.user.id);
-    return { success: false, error: 'Erreur lors de la création de l\'accès. Veuillez réessayer.' };
+    return { success: false, error: t('accessCreate') };
   }
 
   return { success: true };

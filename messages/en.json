@@ -1,0 +1,572 @@
+{
+  "serverActions": {
+    "errors": {
+      "unauthenticated": "Not authenticated.",
+      "accessDenied": "Access denied.",
+      "missingIds": "Missing identifiers.",
+      "missingFields": "All fields are required.",
+      "clientNotFound": "Client not found.",
+      "userNotFound": "User not found.",
+      "structureNotFound": "Structure not found.",
+      "versionNotFound": "Version not found.",
+      "genericCreate": "Error during creation. Please try again.",
+      "profileCreate": "Error while creating the profile. Please try again.",
+      "accessCreate": "Error while creating access. Please try again.",
+      "loadError": "Error loading history.",
+      "publishError": "Error while publishing.",
+      "restoreError": "Error while restoring.",
+      "saveError": "Error while saving.",
+      "slugTaken": "This slug is already taken.",
+      "slugInvalid": "Invalid slug — lowercase letters, digits, and dashes only.",
+      "orgRequired": "Organization, brand, and slug are required.",
+      "invitesInvalid": "Invalid email list.",
+      "logoTooBig": "Logo exceeds 2 MB.",
+      "logoBadFormat": "Logo: PNG or SVG only.",
+      "emailExists": "An account already exists for this address.",
+      "inviteFailed": "Could not send the invitation. Please try again.",
+      "resendFailed": "Could not resend the invitation. Please try again.",
+      "disableAccess": "Could not disable access. Please try again.",
+      "disableAccount": "Could not disable this account. Please try again.",
+      "unarchiveFailed": "Could not reactivate this client.",
+      "archiveFailed": "Could not archive this client.",
+      "alreadyCurrent": "This version is already the current one.",
+      "archivedBeforePublish": "This client is archived. Reactivate it before publishing.",
+      "archivedBeforeRestore": "This client is archived. Reactivate it before restoring.",
+      "rateLimit": "Too many attempts. Wait a minute before retrying.",
+      "generic": "Error."
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "save": "Save",
+    "back": "Back",
+    "open": "Open",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "edit": "Edit",
+    "send": "Send",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "brandOs": "Brand OS",
+    "brandActor": "betula",
+    "brandActorTagline": "Thermotherapy Center",
+    "brandFooter": "Clear signal",
+    "betulaDisto": "betula × disto",
+    "edition": "— 2026 Edition —",
+    "city": "Québec / MTL",
+    "notDefined": "Not defined"
+  },
+  "status": {
+    "active": "Active",
+    "invited": "Invited",
+    "disabled": "Disabled",
+    "draft": "Draft",
+    "archived": "Archived",
+    "published": "Published",
+    "modified": "Modified",
+    "validated": "Validated",
+    "auto": "Auto",
+    "default": "—"
+  },
+  "language": {
+    "label": "Language",
+    "french": "Français",
+    "english": "English"
+  },
+  "auth": {
+    "login": {
+      "eyebrow1": "01 / Clear signal",
+      "heroLine1": "A single",
+      "heroLine2": "brand truth.",
+      "tagline": "The betula portal centralizes the strategy, tone, and system prompt of every brand — so every output stays true to the signal.",
+      "eyebrow2": "02 / Sign in",
+      "title": "Enter the portal.",
+      "subtitle": "We identify your role after sign-in — agency or brand guardian.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "first.last@agency.co",
+      "passwordLabel": "Password",
+      "forgot": "Forgot?",
+      "submitting": "Signing in…",
+      "submit": "Sign in  →",
+      "noAccount": "No account yet?",
+      "requestAccess": "Request access →",
+      "errors": {
+        "invalidCredentials": "Incorrect email or password.",
+        "disabled": "This account has been disabled. Contact your administrator.",
+        "generic": "An error occurred. Please try again.",
+        "noPortal": "No portal is associated with this account. Contact your administrator."
+      }
+    },
+    "forgot": {
+      "eyebrow1": "01 / Recovery",
+      "heroLine1": "Regain",
+      "heroLine2": "your access.",
+      "tagline": "Enter your email address and we'll send you a link to reset your password.",
+      "eyebrow2": "02 / Forgot password",
+      "title": "Reset your\npassword.",
+      "subtitle": "Enter the email address associated with your account.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "first.last@brand.co",
+      "submitting": "Sending…",
+      "submit": "Send the link  →",
+      "back": "← Back to sign-in",
+      "successTitle": "Email sent.",
+      "successBody": "If an account exists for <strong>{email}</strong>, you'll receive a reset link in the next few minutes."
+    },
+    "password": {
+      "errors": {
+        "mismatch": "Passwords do not match.",
+        "too_short": "Password must be at least 8 characters."
+      }
+    },
+    "setPassword": {
+      "eyebrow1": "01 / Welcome",
+      "heroLine1": "Your portal",
+      "heroLine2": "is ready.",
+      "tagline": "Set your password to access your brand's space.",
+      "eyebrow2": "02 / Activation",
+      "title": "Choose a\npassword.",
+      "subtitle": "This password will be tied to your account. Minimum 8 characters.",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm password",
+      "submitting": "Activating…",
+      "submit": "Activate my account  →",
+      "errors": {
+        "expired": "Link expired. Click \"Resend\" in the user list to get a new one.",
+        "invalid": "Invalid or expired link. Request a new invitation.",
+        "generic": "Couldn't set the password. Please try again."
+      }
+    },
+    "updatePassword": {
+      "eyebrow1": "01 / Security",
+      "heroLine1": "New",
+      "heroLine2": "password.",
+      "tagline": "Choose a strong password to secure your access.",
+      "eyebrow2": "02 / New password",
+      "title": "Choose a new\npassword.",
+      "subtitle": "Minimum 8 characters. You'll be redirected to sign-in afterward.",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm password",
+      "submitting": "Updating…",
+      "submit": "Update  →",
+      "errors": {
+        "invalid": "Invalid or expired link. Please start over from \"Forgot password\".",
+        "generic": "Couldn't update the password. Please try again."
+      }
+    }
+  },
+  "crumbs": {
+    "betula": "betula",
+    "brand": "{name}",
+    "console": "Console",
+    "clients": "Clients",
+    "client": "Client",
+    "editor": "Editor",
+    "access": "Access",
+    "import": "Import",
+    "systemPrompt": "System Prompt",
+    "portal": "Portal",
+    "dashboard": "Dashboard",
+    "strategie": "Strategy",
+    "chat": "Chat",
+    "export": "Export"
+  },
+  "sidebar": {
+    "agency": "Agency",
+    "brand": "Brand",
+    "agencyConsole": "Agency console",
+    "brandPortal": "Brand portal",
+    "menuLabel": "Menu",
+    "agency_clients": "Clients",
+    "agency_import": "Import Disto",
+    "agency_editor": "Structure editor",
+    "agency_access": "Access",
+    "agency_systemPrompt": "System Prompt",
+    "client_dashboard": "Dashboard",
+    "client_strategie": "Strategy",
+    "client_chat": "Ask the brand",
+    "client_systemPrompt": "System Prompt"
+  },
+  "userMenu": {
+    "menuLabel": "User menu",
+    "logout": "Sign out →",
+    "fallbackName": "User",
+    "role": {
+      "agency_admin": "Agency Admin",
+      "client_admin": "Admin",
+      "client_reader": "Reader"
+    }
+  },
+  "admin": {
+    "clients": {
+      "eyebrow": "Console · betula Agency",
+      "title": "Clients",
+      "subtitle": "Every brand we support has a portal. Draft, active, or archived — always a single signal.",
+      "loadError": "Error loading clients: ",
+      "filter": {
+        "all": "All",
+        "active": "Active",
+        "draft": "Draft",
+        "archived": "Archived"
+      },
+      "table": {
+        "brand": "Brand",
+        "organization": "Organization",
+        "status": "Status",
+        "lastUpdate": "Last update",
+        "num": "№",
+        "emptyAll": "No clients",
+        "emptyFiltered": "No {filter} clients"
+      },
+      "newClient": "+ New client",
+      "archive": "Archive",
+      "unarchive": "Reactivate",
+      "archiveConfirmTitle": "Archive this client?",
+      "unarchiveConfirmTitle": "Reactivate this client?",
+      "archiveConfirmBody": "Client <strong>{name}</strong> will be marked as archived. Its data is kept.",
+      "unarchiveConfirmBody": "Client <strong>{name}</strong> will become active again.",
+      "countSingular": "{count} of {total} brand",
+      "countPlural": "{count} of {total} brands",
+      "sort": "Sort · Last update ↓"
+    },
+    "newClientModal": {
+      "title": "New client",
+      "orgLabel": "Organization name *",
+      "orgPlaceholder": "e.g. Sartiga Inc.",
+      "brandLabel": "Brand name *",
+      "brandPlaceholder": "e.g. SARTIGA",
+      "slugLabel": "URL slug *",
+      "slugPlaceholder": "e.g. sartiga",
+      "slugHelp": "Used in the client portal URL.",
+      "slugInvalid": "Lowercase letters, digits, and dashes only.",
+      "slugTaken": "This slug is already taken.",
+      "logoLabel": "Logo (optional)",
+      "logoChange": "Change",
+      "logoChoose": "Choose",
+      "logoHelp": "PNG or SVG · max 2 MB",
+      "logoTooBig": "Logo exceeds 2 MB.",
+      "logoBadFormat": "PNG or SVG only.",
+      "adminEmailsLabel": "Client admin email(s) (optional)",
+      "adminEmailPlaceholder": "first.last@brand.co",
+      "roleAdmin": "Admin",
+      "roleReader": "Reader",
+      "addEmail": "+ Add an email",
+      "emailInvalid": "Invalid email: ",
+      "creating": "Creating…",
+      "create": "Create client"
+    },
+    "editor": {
+      "title": "Editor",
+      "empty": "No brand structure. Start by importing a Disto.",
+      "structureHeader": "Structure · 14 sections",
+      "sectionContentPlaceholder": "Content of section \"{name}\"…",
+      "markdownSupported": "Markdown supported",
+      "publishConfirmTitle": "Publish the structure?",
+      "publishConfirmBody": "The Client Portal of <strong>{brand}</strong> will immediately reflect this structure.",
+      "publishConfirmUnsaved": "⚠ Unsaved changes will be included.",
+      "publishing": "Publishing…",
+      "publish": "Publish →",
+      "history": "⟲ History",
+      "saveState": {
+        "saving": "● Saving…",
+        "saved": "✓ Saved",
+        "error": "✕ Save error",
+        "dirty": "● Unsaved changes"
+      },
+      "status": {
+        "draft": "Draft",
+        "published": "Published",
+        "modified": "Modified since publish"
+      },
+      "section": {
+        "identity": "Identity",
+        "mission": "Mission",
+        "intention": "Intent",
+        "archetype": "Archetype",
+        "valueProposition": "Value Proposition",
+        "positioning": "Positioning",
+        "tone": "Tone",
+        "personas": "Personas",
+        "keyMessages": "Key messages",
+        "manifesto": "Manifesto",
+        "competitiveContext": "Competitive context",
+        "values": "Values",
+        "alwaysSay": "Always say",
+        "neverSay": "Never say"
+      },
+      "sectionDesc": {
+        "identity": "Name, subtitle, tagline.",
+        "mission": "Reason for being of the brand.",
+        "intention": "What the brand seeks to create.",
+        "archetype": "Brand archetype + description.",
+        "valueProposition": "Unique value proposition.",
+        "positioning": "Competitive positioning.",
+        "tone": "Brand tone and personality.",
+        "personas": "Primary targets.",
+        "keyMessages": "Key messages per target.",
+        "manifesto": "Brand manifesto text.",
+        "competitiveContext": "Competitive context.",
+        "values": "Core values.",
+        "alwaysSay": "Keywords and sample phrases to favor (one per line, prefixed with \"- \").",
+        "neverSay": "Forbidden keywords (one per line, prefixed with \"- \")."
+      }
+    },
+    "versionHistory": {
+      "title": "History",
+      "subtitlePrevious": "Previous versions",
+      "subtitleVersion": "Version {version}",
+      "loading": "Loading…",
+      "empty": "No previous version. History grows with every save.",
+      "current": "Current version",
+      "publishedTag": "Published (client-visible)",
+      "restoredFrom": "Restored from v{version}",
+      "backToList": "← Back to list",
+      "emptyContent": "No content in this version.",
+      "restoreConfirmTitle": "Restore version {version}?",
+      "restoreConfirmBody": "From {date}. A new version will be created and published immediately. The client will see the new content within seconds.",
+      "restoring": "Restoring…",
+      "restore": "Restore and publish",
+      "restoreThisVersion": "Restore this version →",
+      "emptySection": "(empty)",
+      "status": {
+        "draft": "Draft",
+        "published": "Published",
+        "modified": "Modified",
+        "archived": "Archived"
+      },
+      "relative": {
+        "now": "just now",
+        "minutes": "{n} min ago",
+        "hours": "{n} h ago",
+        "days": "{n} d ago",
+        "months": "{n} months ago",
+        "yearsSingular": "{n} year ago",
+        "yearsPlural": "{n} years ago"
+      }
+    },
+    "import": {
+      "title": "Import Disto",
+      "heading": "Import Disto.",
+      "subtitle": "Drop the client's brand document. We extract, we structure, you validate.",
+      "step": {
+        "upload": "Upload",
+        "extraction": "Extraction",
+        "structuring": "AI Structuring",
+        "save": "Save"
+      },
+      "pdfOnly": "PDF format only.",
+      "tooBig": "File exceeds 50 MB.",
+      "serverError": "Server error.",
+      "unknownError": "Unknown error.",
+      "existingStructureTitle": "Existing structure detected",
+      "existingStructureBody": "A brand structure already exists (v{version}). Do you want to replace it or create a new version?",
+      "newVersion": "New version",
+      "replace": "Replace",
+      "pdfTag": "PDF",
+      "fileSelected": "File selected",
+      "dropHere": "Drop the PDF here",
+      "fileHelp": "PDF only · max 50 MB",
+      "change": "Change",
+      "choose": "Choose a file",
+      "launch": "Start ingestion →",
+      "retry": "Retry",
+      "pipelineHeader": "Pipeline · 4 steps",
+      "inProgress": "● In progress…",
+      "done": "Done",
+      "openEditor": "Open editor →"
+    },
+    "access": {
+      "title": "Access",
+      "heading": "Who can read, who can write.",
+      "subtitle": "An Admin edits the structure and publishes. A Reader views the portal and queries the AI — nothing more.",
+      "stats": {
+        "totalUsers": "Total users",
+        "admins": "Admins",
+        "pendingInvites": "Pending invites",
+        "disabled": "Disabled"
+      },
+      "usersHeading": "{brand} users",
+      "empty": "No users invited yet.",
+      "table": {
+        "email": "Email",
+        "role": "Role",
+        "status": "Status",
+        "invitedAt": "Invited on"
+      }
+    },
+    "inviteForm": {
+      "title": "New invitation",
+      "subtitle": "Add a brand guardian.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "first.last@brand.co",
+      "roleLabel": "Role",
+      "roleAdmin": "Admin",
+      "roleReader": "Reader",
+      "sending": "Sending…",
+      "submit": "Send  →",
+      "success": "Invitation sent to {email}."
+    },
+    "disableUser": {
+      "close": "Close",
+      "disableTitle": "Disable account",
+      "disableBody": "Disable <strong>{userName}</strong>'s account? This action is irreversible.",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "resendTitle": "Resend invitation",
+      "resendBody": "Resend an invitation link to <strong>{userName}</strong>?",
+      "resendConfirm": "Resend",
+      "disabledTag": "Disabled",
+      "sentTag": "Sent ✓",
+      "resend": "Resend",
+      "disable": "Disable"
+    },
+    "systemPrompt": {
+      "title": "System Prompt",
+      "syncedVersion": "Synced · v {version}"
+    }
+  },
+  "client": {
+    "dashboard": {
+      "brandAdmin": "Brand admin",
+      "notPublishedTitle": "Structure not published",
+      "notPublishedBody": "The agency must publish the brand strategy before sections, chat, and export become available.",
+      "eyebrow": "№ 01 · Brand portal",
+      "lastUpdate": "Last update",
+      "publishedTag": "Published",
+      "draftTag": "Draft",
+      "actionEyebrow1": "Action · 01",
+      "actionTitle1": "Ask the brand.",
+      "actionSubtitle1": "An AI that knows your tone, archetype, and rules.",
+      "actionEyebrow2": "Action · 02",
+      "actionTitle2": "Export the prompt.",
+      "actionSubtitle2": "ChatGPT · Claude · Gemini · universal .txt.",
+      "coreEyebrow": "02 / Brand core"
+    },
+    "chat": {
+      "title": "Ask the brand",
+      "notPublished": "Structure not published",
+      "aiVersion": "AI · v {version}",
+      "noStructureTitle": "No published structure",
+      "noStructureBody": "The agency must first import and publish the brand strategy before the AI can respond.",
+      "suggestions": {
+        "tone": "What tone should we use on Instagram?",
+        "bio": "Write a short brand bio",
+        "values": "What are our three core values?",
+        "differentiate": "How do we differ from our competitors?"
+      },
+      "unknownError": "Unknown error.",
+      "genericError": "An error occurred.",
+      "networkError": "Network error. Please try again.",
+      "newThreadConfirm": "Start a new conversation? The current history will be lost.",
+      "newThread": "New thread",
+      "askBrand": "Ask {brand}.",
+      "askIntro": "Ask anything about your brand strategy. The AI knows your tone, archetype, and rules.",
+      "brandAi": "{brand} · brand AI",
+      "basedOn": "Based on",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "typing": "● Typing",
+      "suggestionsLabel": "Suggestions ·",
+      "inputPlaceholder": "Ask the brand… (Enter to send, Shift+Enter for newline)",
+      "inputAria": "Question to the brand",
+      "send": "Send →"
+    },
+    "strategie": {
+      "title": "Strategy",
+      "search": "Search…",
+      "searchAria": "Search the strategy",
+      "clearSearch": "Clear search",
+      "structureLabel": "Structure",
+      "noResults": "No results for \"{query}\"",
+      "strategieBrand": "Strategy · {brand}",
+      "sectionEmpty": "This section has not been defined yet.",
+      "structureUpdated": "Structure updated",
+      "modify": "Edit",
+      "modifyProposalTitle": "Edit proposal",
+      "proposedContent": "Proposed content",
+      "submitProposal": "Submit update",
+      "cancel": "Cancel",
+      "proposalSent": "Your proposal has been sent to the agency for review.",
+      "cancelProposalConfirm": "Cancel the current proposal and switch section?",
+      "sendError": "Could not send the proposal.",
+      "networkError": "Network error. Please try again.",
+      "submitting": "Sending…",
+      "section": {
+        "identity": "Brand identity",
+        "mission": "Mission & Vision",
+        "intention": "Brand intent",
+        "archetype": "Archetype",
+        "valueProposition": "Value proposition",
+        "positioning": "Positioning",
+        "tone": "Tone & Personality",
+        "personas": "Targets & Personas",
+        "keyMessages": "Key messages",
+        "manifesto": "Manifesto",
+        "competitiveContext": "Competitive context",
+        "values": "Values & Principles",
+        "alwaysSay": "Always say",
+        "neverSay": "Never say"
+      },
+      "relative": {
+        "now": "just now",
+        "minutes": "{n} min ago",
+        "hours": "{n} h ago",
+        "days": "{n} d ago",
+        "months": "{n} months ago",
+        "yearsSingular": "{n} year ago",
+        "yearsPlural": "{n} years ago"
+      }
+    },
+    "export": {
+      "title": "System Prompt",
+      "eyebrow": "Brand portal · Export",
+      "heading": "System Prompt.",
+      "subtitle": "A prompt compiled from your brand structure. Paste it at the start of a new conversation — every model will speak as your brand.",
+      "notPublishedTitle": "Structure not published",
+      "notPublishedBody": "The agency must publish the brand strategy before the export becomes available.",
+      "tokensEstimated": "Estimated tokens",
+      "generatedAt": "Generated on",
+      "copyAll": "Copy all",
+      "copied": "Copied!",
+      "emptyContent": "No content — the structure isn't published.",
+      "destinationsHeader": "Destinations · 04",
+      "whereToInstall": "Where to install?",
+      "promptHeading": "# SYSTEM PROMPT · {brand}",
+      "format": "Format {ext}",
+      "download": "Download",
+      "installInstructions": "Install instructions",
+      "agencyTipLabel": "Agency tip",
+      "agencyTipBody": "Recompile the prompt after every major publish. Models remember the last version pasted in — not the one in the portal.",
+      "downloadError": "Download failed.",
+      "networkError": "Network error. Please try again.",
+      "target": {
+        "chatgpt_custom_gpt": {
+          "label": "ChatGPT — Custom GPT",
+          "instructions": "1. Go to platform.openai.com → \"My GPTs\" → \"Create a GPT\"\n2. In the \"Configure\" tab, paste the content into the \"Instructions\" field\n3. Give your GPT a name (e.g. \"Brand assistant\") and click \"Save\"\n4. Share the link with your team"
+        },
+        "claude_project": {
+          "label": "Claude — Project",
+          "instructions": "1. Go to claude.ai → \"Projects\" → \"New Project\"\n2. Click \"Set project instructions\" and paste the .md file content\n3. Name the project (e.g. \"Brand\") and invite your collaborators\n4. All project conversations will inherit the system prompt"
+        },
+        "claude_skill": {
+          "label": "Claude — Skill",
+          "instructions": "CLAUDE.AI:\n1. Go to claude.ai → Settings → Capabilities → Skills\n2. Click \"Upload skill\" and select the downloaded .zip file\n3. Enable the skill — Claude will invoke it automatically when relevant\n\nCLAUDE CODE CLI:\n1. Unzip the file into ~/.claude/skills/ (create the folder if needed)\n2. You'll get ~/.claude/skills/<brand>/SKILL.md\n3. Restart Claude Code — the skill appears in the available skills list"
+        },
+        "gemini_gem": {
+          "label": "Gemini — Gem",
+          "instructions": "1. Go to gemini.google.com → \"Gems\" → \"Create a Gem\"\n2. Paste the content into the \"Instructions\" field\n3. Enable long memory in advanced settings\n4. Save and share with your team"
+        },
+        "universal_txt": {
+          "label": "Universal — .txt",
+          "instructions": "Plain text format with no tags.\nCopy the content and paste it at the start of any AI conversation (Mistral, Llama, Perplexity, etc.).\nThis format works with any model that accepts a system prompt or initial message."
+        }
+      }
+    },
+    "updateBanner": {
+      "message": "Your strategy has been updated.",
+      "close": "Close"
+    }
+  }
+}

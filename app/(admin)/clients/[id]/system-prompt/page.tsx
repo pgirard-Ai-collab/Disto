@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { C } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
-import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
+import I18nTopBar from '@/components/i18n/I18nTopBar';
 import Pill from '@/components/ui/Pill';
 import { buildPromptBody, estimateTokens, type BrandSections } from '@/lib/build-prompt';
 import ExportPanel from '@/app/(client)/[brand]/export/ExportPanel';
@@ -11,6 +12,9 @@ import ExportPanel from '@/app/(client)/[brand]/export/ExportPanel';
 export default async function AgencySystemPromptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+  const t = await getTranslations('admin.systemPrompt');
+  const locale = await getLocale();
+  const dateLocale = locale === 'fr' ? 'fr-CA' : 'en-CA';
 
   const { data: client, error: clientErr } = await supabase
     .from('clients')
@@ -34,8 +38,8 @@ export default async function AgencySystemPromptPage({ params }: { params: Promi
   const sections = (structure.sections ?? {}) as BrandSections;
   const version = structure.version;
   const generatedAt = structure.updated_at
-    ? new Date(structure.updated_at).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' })
-    : new Date().toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+    ? new Date(structure.updated_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })
+    : new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
   const promptPreview = buildPromptBody(client.brand_name, sections);
   const tokenEstimate = estimateTokens(promptPreview);
@@ -44,12 +48,13 @@ export default async function AgencySystemPromptPage({ params }: { params: Promi
     <div className="portal-layout" style={{ background: C.black, color: C.bone }}>
       <Sidebar variant="agency" clientId={id} hasPublishedVersion />
       <div className="portal-main">
-        <TopBar
+        <I18nTopBar
           theme="dark"
-          crumbs={['betula', client.brand_name, 'System Prompt']}
+          crumbKeys={['crumbs.betula', 'crumbs.brand', 'crumbs.systemPrompt']}
+          crumbValues={{ 'crumbs.brand': { name: client.brand_name } }}
           right={
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <Pill kind="active" dot>Synchronisé · v {version}</Pill>
+              <Pill kind="active" dot>{t('syncedVersion', { version })}</Pill>
               <UserMenu theme="dark" />
             </div>
           }

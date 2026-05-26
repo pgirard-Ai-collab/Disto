@@ -1,19 +1,16 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { C, STATUS_LABEL } from '@/lib/disto';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { C } from '@/lib/disto';
 import type { PillKind } from '@/lib/disto';
 import Sidebar from '@/components/layout/Sidebar';
-import TopBar from '@/components/layout/TopBar';
 import UserMenu from '@/components/layout/UserMenu';
-import SectionHead from '@/components/ui/SectionHead';
+import I18nTopBar from '@/components/i18n/I18nTopBar';
+import I18nSectionHead from '@/components/i18n/I18nSectionHead';
 import Pill from '@/components/ui/Pill';
 import { hasPublishedStructure } from '@/lib/has-published';
 import InviteForm from './InviteForm';
 import DisableUserBtn from './DisableUserBtn';
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
 const STATUS_TO_PILL: Record<'invited' | 'active' | 'disabled', PillKind> = {
   invited: 'invited',
@@ -24,6 +21,13 @@ const STATUS_TO_PILL: Record<'invited' | 'active' | 'disabled', PillKind> = {
 export default async function AccessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+  const t = await getTranslations('admin.access');
+  const tStatus = await getTranslations('status');
+  const tInvite = await getTranslations('admin.inviteForm');
+  const locale = await getLocale();
+  const dateLocale = locale === 'fr' ? 'fr-CA' : 'en-CA';
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' });
 
   const { data: client, error: clientErr } = await supabase
     .from('clients')
@@ -39,12 +43,11 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
     .eq('client_id', id)
     .order('invited_at', { ascending: false });
 
-  // Batch fetch all user emails in one shot (avoids N+1)
   type UserRow = {
     id: string;
     user_id: string;
     email: string;
-    role: string;
+    role: 'admin' | 'reader';
     status: 'invited' | 'active' | 'disabled';
     invited_at: string;
   };
@@ -59,7 +62,7 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
         id: cu.id,
         user_id: cu.user_id,
         email: emailById.get(cu.user_id) ?? cu.user_id,
-        role: cu.role === 'admin' ? 'Admin' : 'Lecteur',
+        role: (cu.role === 'admin' ? 'admin' : 'reader'),
         status: cu.status as 'invited' | 'active' | 'disabled',
         invited_at: cu.invited_at,
       });
@@ -69,27 +72,28 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
   const hasPublished = await hasPublishedStructure(id);
 
   const stats = [
-    { n: String(users.length).padStart(2, '0'),                                       l: 'Utilisateurs totaux',  accent: C.black },
-    { n: String(users.filter(u => u.role === 'Admin').length).padStart(2, '0'),       l: 'Admins',               accent: C.red },
-    { n: String(users.filter(u => u.status === 'invited').length).padStart(2, '0'),   l: 'Invités en attente',   accent: C.cyan },
-    { n: String(users.filter(u => u.status === 'disabled').length).padStart(2, '0'),  l: 'Désactivés',           accent: C.muted },
+    { n: String(users.length).padStart(2, '0'),                                       l: t('stats.totalUsers'),    accent: C.black },
+    { n: String(users.filter(u => u.role === 'admin').length).padStart(2, '0'),       l: t('stats.admins'),        accent: C.red },
+    { n: String(users.filter(u => u.status === 'invited').length).padStart(2, '0'),   l: t('stats.pendingInvites'),accent: C.cyan },
+    { n: String(users.filter(u => u.status === 'disabled').length).padStart(2, '0'),  l: t('stats.disabled'),      accent: C.muted },
   ];
 
   return (
     <div className="portal-layout" style={{ background: C.bone, color: C.black }}>
       <Sidebar variant="agency" clientId={id} hasPublishedVersion={hasPublished} />
       <div className="portal-main">
-        <TopBar
+        <I18nTopBar
           theme="light"
-          crumbs={['betula', client.brand_name, 'Accès']}
+          crumbKeys={['crumbs.betula', 'crumbs.brand', 'crumbs.access']}
+          crumbValues={{ 'crumbs.brand': { name: client.brand_name } }}
           right={<UserMenu theme="light" />}
         />
         <div className="portal-scroll" style={{ padding: '36px 40px 40px' }}>
-          <SectionHead
+          <I18nSectionHead
             num="04"
-            eyebrow={`${client.brand_name} · Accès & permissions`}
-            title="Qui peut lire, qui peut écrire."
-            subtitle="Un Admin modifie la structure et publie. Un Lecteur consulte le portail et interroge l'IA — jamais plus."
+            eyebrowKey="admin.access.title"
+            titleKey="admin.access.heading"
+            subtitleKey="admin.access.subtitle"
           />
 
           <InviteForm clientId={id} />
@@ -104,12 +108,12 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em', marginBottom: 14 }}>
-            Utilisateurs {client.brand_name}
+            {t('usersHeading', { brand: client.brand_name })}
           </div>
 
           {users.length === 0 ? (
             <div style={{ padding: '32px 20px', background: C.white, border: `1px solid ${C.border1}`, textAlign: 'center', color: C.muted, fontSize: 14 }}>
-              Aucun utilisateur invité pour l&apos;instant.
+              {t('empty')}
             </div>
           ) : (
             <div className="table-scroll">
@@ -119,10 +123,15 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
                   padding: '14px 24px', borderBottom: `1px solid ${C.border1}`,
                   fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted,
                 }}>
-                  <span>Courriel</span><span>Rôle</span><span>Statut</span><span>Invité le</span><span style={{ textAlign: 'right' }}>—</span>
+                  <span>{t('table.email')}</span>
+                  <span>{t('table.role')}</span>
+                  <span>{t('table.status')}</span>
+                  <span>{t('table.invitedAt')}</span>
+                  <span style={{ textAlign: 'right' }}>—</span>
                 </div>
                 {users.map((u, i) => {
                   const pillKind = STATUS_TO_PILL[u.status];
+                  const roleLabel = u.role === 'admin' ? tInvite('roleAdmin') : tInvite('roleReader');
                   return (
                     <div key={u.id} style={{
                       display: 'grid', gridTemplateColumns: '2.5fr 1fr 1fr 1.2fr 80px',
@@ -132,8 +141,8 @@ export default async function AccessPage({ params }: { params: Promise<{ id: str
                       opacity: u.status === 'disabled' ? 0.5 : 1,
                     }}>
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: C.muted }}>{u.email}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: u.role === 'Admin' ? C.red : C.black }}>{u.role}</span>
-                      <Pill kind={pillKind}>{STATUS_LABEL[u.status] ?? u.status}</Pill>
+                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: u.role === 'admin' ? C.red : C.black }}>{roleLabel}</span>
+                      <Pill kind={pillKind}>{tStatus(u.status)}</Pill>
                       <span style={{ color: C.muted, fontSize: 12 }}>{formatDate(u.invited_at)}</span>
                       <span style={{ textAlign: 'right' }}>
                         <DisableUserBtn

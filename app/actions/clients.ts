@@ -1,14 +1,25 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
 export type ClientEmailInvite = { email: string; role: 'admin' | 'reader' };
 
+type ErrorKey =
+  | 'unauthenticated' | 'accessDenied' | 'generic' | 'genericCreate'
+  | 'orgRequired' | 'slugInvalid' | 'slugTaken' | 'invitesInvalid'
+  | 'logoTooBig' | 'logoBadFormat' | 'archiveFailed' | 'unarchiveFailed';
+
+async function tErrors() {
+  return getTranslations('serverActions.errors');
+}
+
 async function requireAgencyAdmin() {
+  const t = await tErrors();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Non authentifié.', admin: null };
+  if (!user) return { error: t('unauthenticated'), admin: null };
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -16,7 +27,7 @@ async function requireAgencyAdmin() {
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'agency_admin') return { error: 'Accès refusé.', admin: null };
+  if (profile?.role !== 'agency_admin') return { error: t('accessDenied'), admin: null };
 
   return { error: null, admin: await createAdminClient() };
 }
@@ -25,9 +36,14 @@ export type ClientActionResult =
   | { success: true; clientId?: string }
   | { success: false; error: string };
 
+function fail(t: (key: ErrorKey) => string, key: ErrorKey): ClientActionResult {
+  return { success: false, error: t(key) };
+}
+
 export async function createClientRecord(formData: FormData): Promise<ClientActionResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const org_name   = (formData.get('org_name')   as string)?.trim();
   const brand_name = (formData.get('brand_name') as string)?.trim();
@@ -35,24 +51,18 @@ export async function createClientRecord(formData: FormData): Promise<ClientActi
   const logoFile   = formData.get('logo') as File | null;
   const invitesRaw = formData.get('invites') as string | null;
 
-  if (!org_name || !brand_name || !slug) {
-    return { success: false, error: 'Nom organisation, marque et slug sont requis.' };
-  }
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    return { success: false, error: 'Slug invalide — lettres minuscules, chiffres et tirets seulement.' };
-  }
+  if (!org_name || !brand_name || !slug) return fail(t, 'orgRequired');
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return fail(t, 'slugInvalid');
 
   let invites: ClientEmailInvite[] = [];
   try {
     invites = invitesRaw ? JSON.parse(invitesRaw) : [];
   } catch {
-    return { success: false, error: 'Liste d\'emails invalide.' };
+    return fail(t, 'invitesInvalid');
   }
 
-  // Validate logo upload constraints if provided
   let logoUrl: string | null = null;
 
-  // Insert client first
   const { data: insertedClient, error: dbError } = await admin
     .from('clients')
     .insert({ org_name, brand_name, slug, status: 'draft' })
@@ -60,18 +70,13 @@ export async function createClientRecord(formData: FormData): Promise<ClientActi
     .single();
 
   if (dbError || !insertedClient) {
-    if (dbError?.code === '23505') return { success: false, error: 'Ce slug est déjà utilisé.' };
-    return { success: false, error: 'Erreur lors de la création. Veuillez réessayer.' };
+    if (dbError?.code === '23505') return fail(t, 'slugTaken');
+    return fail(t, 'genericCreate');
   }
 
-  // Upload logo if present
   if (logoFile && logoFile.size > 0) {
-    if (logoFile.size > 2 * 1024 * 1024) {
-      return { success: false, error: 'Le logo dépasse 2 MB.' };
-    }
-    if (!['image/png', 'image/svg+xml'].includes(logoFile.type)) {
-      return { success: false, error: 'Logo : PNG ou SVG uniquement.' };
-    }
+    if (logoFile.size > 2 * 1024 * 1024) return fail(t, 'logoTooBig');
+    if (!['image/png', 'image/svg+xml'].includes(logoFile.type)) return fail(t, 'logoBadFormat');
     const ext = logoFile.type === 'image/svg+xml' ? 'svg' : 'png';
     const path = `${slug}/logo.${ext}`;
     const { error: upError } = await admin.storage
@@ -84,7 +89,6 @@ export async function createClientRecord(formData: FormData): Promise<ClientActi
     }
   }
 
-  // Send invites
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
   for (const inv of invites) {
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(inv.email, { redirectTo });
@@ -105,15 +109,16 @@ export async function createClientRecord(formData: FormData): Promise<ClientActi
 }
 
 export async function archiveClient(clientId: string): Promise<ClientActionResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const { error: dbError } = await admin
     .from('clients')
     .update({ status: 'archived' })
     .eq('id', clientId);
 
-  if (dbError) return { success: false, error: 'Impossible d\'archiver ce client.' };
+  if (dbError) return fail(t, 'archiveFailed');
 
   revalidatePath('/clients');
   revalidatePath(`/clients/${clientId}`);
@@ -121,15 +126,16 @@ export async function archiveClient(clientId: string): Promise<ClientActionResul
 }
 
 export async function activateClient(clientId: string): Promise<ClientActionResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const { error: dbError } = await admin
     .from('clients')
     .update({ status: 'active' })
     .eq('id', clientId);
 
-  if (dbError) return { success: false, error: 'Impossible de réactiver ce client.' };
+  if (dbError) return fail(t, 'unarchiveFailed');
 
   revalidatePath('/clients');
   revalidatePath(`/clients/${clientId}`);
@@ -145,3 +151,4 @@ export async function checkSlugAvailable(slug: string): Promise<boolean> {
     .maybeSingle();
   return data === null;
 }
+

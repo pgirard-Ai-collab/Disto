@@ -1,18 +1,24 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 
+async function tErrors() {
+  return getTranslations('serverActions.errors');
+}
+
 async function requireAgencyAdmin() {
+  const t = await tErrors();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Non authentifié.', admin: null, userId: null };
+  if (!user) return { error: t('unauthenticated'), admin: null, userId: null };
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single();
-  if (profile?.role !== 'agency_admin') return { error: 'Accès refusé.', admin: null, userId: null };
+  if (profile?.role !== 'agency_admin') return { error: t('accessDenied'), admin: null, userId: null };
   return { error: null, admin: await createAdminClient(), userId: user.id };
 }
 
@@ -29,8 +35,9 @@ export async function saveBrandStructure(
   structureId: string,
   sections: Record<string, string>,
 ): Promise<SaveResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const { data, error: rpcError } = await admin.rpc('save_brand_structure', {
     source_structure_id: structureId,
@@ -44,13 +51,13 @@ export async function saveBrandStructure(
       details: rpcError.details,
       hint: rpcError.hint,
     });
-    if (rpcError.code === '42501') return { success: false, error: 'Accès refusé.' };
-    if (rpcError.code === 'P0002') return { success: false, error: 'Structure introuvable.' };
-    return { success: false, error: 'Erreur lors de la sauvegarde.' };
+    if (rpcError.code === '42501') return { success: false, error: t('accessDenied') };
+    if (rpcError.code === 'P0002') return { success: false, error: t('structureNotFound') };
+    return { success: false, error: t('saveError') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
-  if (!row) return { success: false, error: 'Erreur lors de la sauvegarde.' };
+  if (!row) return { success: false, error: t('saveError') };
 
   return {
     success: true,
@@ -68,8 +75,9 @@ export async function publishBrandStructure(
   structureId: string,
   sections: Record<string, string>,
 ): Promise<PublishResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const { data: src } = await admin
     .from('brand_structures')
@@ -89,20 +97,20 @@ export async function publishBrandStructure(
       details: rpcError.details,
       hint: rpcError.hint,
     });
-    if (rpcError.code === '42501') return { success: false, error: 'Accès refusé.' };
+    if (rpcError.code === '42501') return { success: false, error: t('accessDenied') };
     if (rpcError.code === 'P0002') {
-      return { success: false, error: rpcError.message?.includes('client') ? 'Client introuvable.' : 'Structure introuvable.' };
+      return { success: false, error: rpcError.message?.includes('client') ? t('clientNotFound') : t('structureNotFound') };
     }
     if (rpcError.code === 'P0001') {
-      return { success: false, error: 'Ce client est archivé. Réactivez-le avant de publier.' };
+      return { success: false, error: t('archivedBeforePublish') };
     }
-    return { success: false, error: 'Erreur lors de la publication.' };
+    return { success: false, error: t('publishError') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) {
     console.error('[publishBrandStructure] RPC returned no row', { data, structureId });
-    return { success: false, error: 'Erreur lors de la publication.' };
+    return { success: false, error: t('publishError') };
   }
 
   if (src?.client_id) {
@@ -127,8 +135,9 @@ export type RestoreResult =
 export async function restoreBrandStructureVersion(
   sourceStructureId: string,
 ): Promise<RestoreResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const { data: src } = await admin
     .from('brand_structures')
@@ -147,23 +156,23 @@ export async function restoreBrandStructureVersion(
       details: rpcError.details,
       hint: rpcError.hint,
     });
-    if (rpcError.code === '42501') return { success: false, error: 'Accès refusé.' };
+    if (rpcError.code === '42501') return { success: false, error: t('accessDenied') };
     if (rpcError.code === 'P0002') {
-      return { success: false, error: rpcError.message?.includes('client') ? 'Client introuvable.' : 'Version introuvable.' };
+      return { success: false, error: rpcError.message?.includes('client') ? t('clientNotFound') : t('versionNotFound') };
     }
     if (rpcError.code === 'P0001') {
       if (rpcError.message?.includes('already_current')) {
-        return { success: false, error: 'Cette version est déjà la version courante.' };
+        return { success: false, error: t('alreadyCurrent') };
       }
       if (rpcError.message?.includes('client_archived')) {
-        return { success: false, error: 'Ce client est archivé. Réactivez-le avant de restaurer.' };
+        return { success: false, error: t('archivedBeforeRestore') };
       }
     }
-    return { success: false, error: 'Erreur lors de la restauration.' };
+    return { success: false, error: t('restoreError') };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
-  if (!row) return { success: false, error: 'Erreur lors de la restauration.' };
+  if (!row) return { success: false, error: t('restoreError') };
 
   if (src?.client_id) {
     revalidatePath(`/clients/${src.client_id}`);
@@ -197,8 +206,9 @@ export type ListVersionsResult =
   | { success: false; error: string };
 
 export async function listBrandStructureVersions(clientId: string): Promise<ListVersionsResult> {
+  const t = await tErrors();
   const { error, admin } = await requireAgencyAdmin();
-  if (error || !admin) return { success: false, error: error ?? 'Erreur.' };
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
 
   const { data: rows, error: dbError } = await admin
     .from('brand_structures')
@@ -206,7 +216,7 @@ export async function listBrandStructureVersions(clientId: string): Promise<List
     .eq('client_id', clientId)
     .order('version', { ascending: false });
 
-  if (dbError) return { success: false, error: 'Erreur lors du chargement de l\'historique.' };
+  if (dbError) return { success: false, error: t('loadError') };
 
   const userIds = Array.from(
     new Set((rows ?? []).map((r) => r.created_by).filter((v): v is string => !!v)),

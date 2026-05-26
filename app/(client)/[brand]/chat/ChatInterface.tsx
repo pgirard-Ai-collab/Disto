@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { C } from '@/lib/disto';
 import Btn from '@/components/ui/Btn';
 import Eyebrow from '@/components/ui/Eyebrow';
@@ -13,13 +14,6 @@ type Message = {
   copied?: boolean;
 };
 
-const SUGGESTIONS = [
-  'Quel ton adopter sur Instagram ?',
-  'Rédigez une bio de marque courte',
-  'Quelles sont nos trois valeurs fondamentales ?',
-  'Comment se différencier de nos concurrents ?',
-];
-
 let msgCounter = 0;
 function makeId(): string {
   msgCounter += 1;
@@ -29,20 +23,26 @@ function makeId(): string {
 type Props = { brand: string; brandSlug: string };
 
 export default function ChatInterface({ brand, brandSlug }: Props) {
+  const t = useTranslations('client.chat');
+  const SUGGESTIONS = [
+    t('suggestions.tone'),
+    t('suggestions.bio'),
+    t('suggestions.values'),
+    t('suggestions.differentiate'),
+  ];
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll on new content
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -80,11 +80,11 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
         };
         setMessages(prev => [...prev, aiMsg]);
       } else {
-        const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
+        const data = await res.json().catch(() => ({ error: t('unknownError') }));
         setMessages(prev => [...prev, {
           id: makeId(),
           role: 'assistant',
-          content: data.error ?? 'Une erreur est survenue.',
+          content: data.error ?? t('genericError'),
           sources: [],
         }]);
       }
@@ -92,7 +92,7 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
       setMessages(prev => [...prev, {
         id: makeId(),
         role: 'assistant',
-        content: 'Erreur réseau. Veuillez réessayer.',
+        content: t('networkError'),
         sources: [],
       }]);
     } finally {
@@ -118,7 +118,7 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
   function newThread() {
     if (loading) return;
     if (messages.length > 0) {
-      const ok = window.confirm('Démarrer une nouvelle conversation ? L\'historique actuel sera perdu.');
+      const ok = window.confirm(t('newThreadConfirm'));
       if (!ok) return;
     }
     setMessages([]);
@@ -129,14 +129,12 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.black, overflow: 'hidden' }}>
-      {/* Toolbar */}
       <div style={{ padding: '12px 56px', borderBottom: `1px solid ${C.line}`, display: 'flex', justifyContent: 'flex-end' }}>
         <Btn variant="ghost" size="sm" onDark onClick={newThread} disabled={messages.length === 0 && !loading}>
-          Nouveau fil
+          {t('newThread')}
         </Btn>
       </div>
 
-      {/* Conversation area */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '36px 56px 20px' }}>
         {messages.length === 0 && !loading && (
           <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', paddingTop: 48 }}>
@@ -144,10 +142,10 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
               {brandInitials}
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.015em', marginBottom: 12, color: C.bone }}>
-              Interrogez {brand}.
+              {t('askBrand', { brand })}
             </div>
             <div style={{ fontSize: 14, color: C.fg3, lineHeight: 1.65 }}>
-              Posez vos questions sur votre stratégie de marque. L&apos;IA connaît votre ton, votre archétype et vos règles.
+              {t('askIntro')}
             </div>
           </div>
         )}
@@ -172,7 +170,7 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
                 <div style={{ width: 22, height: 22, background: C.red, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 10, fontWeight: 900 }}>
                   {brandInitials}
                 </div>
-                <Eyebrow color={C.fg3}>{brand} · IA de marque</Eyebrow>
+                <Eyebrow color={C.fg3}>{t('brandAi', { brand })}</Eyebrow>
               </div>
               <div style={{ background: C.panel, border: `1px solid ${C.line}`, padding: '22px 26px' }}>
                 <div style={{ fontSize: 15.5, lineHeight: 1.7, color: C.bone, marginBottom: 18, whiteSpace: 'pre-wrap' }}>
@@ -181,7 +179,7 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
                 <div style={{ paddingTop: 16, borderTop: `1px solid ${C.line}`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                   {m.sources && m.sources.length > 0 && (
                     <>
-                      <Eyebrow color={C.muted} style={{ fontSize: 10 }}>Basé sur</Eyebrow>
+                      <Eyebrow color={C.muted} style={{ fontSize: 10 }}>{t('basedOn')}</Eyebrow>
                       {m.sources.map((s, i) => (
                         <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', border: `1px solid ${C.line2}`, color: C.bone, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em' }}>
                           {s}
@@ -191,7 +189,7 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
                   )}
                   <div style={{ marginLeft: 'auto' }}>
                     <Btn variant="ghost" size="sm" onDark onClick={() => copyReply(m.id, m.content)}>
-                      {m.copied ? 'Copié !' : 'Copier'}
+                      {m.copied ? t('copied') : t('copy')}
                     </Btn>
                   </div>
                 </div>
@@ -206,8 +204,8 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
               <div style={{ width: 22, height: 22, background: C.red, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 10, fontWeight: 900 }}>
                 {brandInitials}
               </div>
-              <Eyebrow color={C.fg3}>{brand} · IA de marque</Eyebrow>
-              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.red }}>● En train d&apos;écrire</span>
+              <Eyebrow color={C.fg3}>{t('brandAi', { brand })}</Eyebrow>
+              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.red }}>{t('typing')}</span>
             </div>
             <div style={{ background: C.panel, border: `1px solid ${C.line}`, padding: '22px 26px' }}>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -223,11 +221,10 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
         )}
       </div>
 
-      {/* Composer */}
       <div style={{ padding: '16px 56px 28px', borderTop: `1px solid ${C.line}`, background: C.black }}>
         {messages.length === 0 && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-            <Eyebrow color={C.muted} style={{ fontSize: 10, display: 'flex', alignItems: 'center' }}>Suggestions ·</Eyebrow>
+            <Eyebrow color={C.muted} style={{ fontSize: 10, display: 'flex', alignItems: 'center' }}>{t('suggestionsLabel')}</Eyebrow>
             {SUGGESTIONS.map(q => (
               <button
                 key={q}
@@ -250,9 +247,9 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Demander à la marque… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)"
+            placeholder={t('inputPlaceholder')}
             rows={1}
-            aria-label="Question à la marque"
+            aria-label={t('inputAria')}
             maxLength={4000}
             style={{
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
@@ -261,7 +258,7 @@ export default function ChatInterface({ brand, brandSlug }: Props) {
             }}
           />
           <Btn variant="primary" size="sm" onClick={() => send()} disabled={!input.trim() || loading}>
-            Envoyer →
+            {t('send')}
           </Btn>
         </div>
       </div>

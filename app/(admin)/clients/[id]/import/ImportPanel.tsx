@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { C } from '@/lib/disto';
 import Btn from '@/components/ui/Btn';
 import Eyebrow from '@/components/ui/Eyebrow';
@@ -12,11 +13,11 @@ type StepKey = 'upload' | 'extract' | 'llm' | 'save';
 type StepState = 'pending' | 'running' | 'done' | 'error';
 type Step = { key: StepKey; state: StepState; meta?: string };
 
-const STEP_LABELS: Record<StepKey, string> = {
-  upload:  'Upload',
-  extract: 'Extraction',
-  llm:     'Structuration IA',
-  save:    'Enregistrement',
+const STEP_I18N: Record<StepKey, 'upload' | 'extraction' | 'structuring' | 'save'> = {
+  upload:  'upload',
+  extract: 'extraction',
+  llm:     'structuring',
+  save:    'save',
 };
 
 const INITIAL_STEPS: Step[] = [
@@ -36,6 +37,9 @@ type Props = {
 };
 
 export default function ImportPanel({ clientId, existing, activeJob }: Props) {
+  const t = useTranslations('admin.import');
+  const tCommon = useTranslations('common');
+  const tStep = useTranslations('admin.import.step');
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -50,7 +54,6 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
   const running = jobStatus === 'pending' || jobStatus === 'running';
   const done = jobStatus === 'done';
 
-  // Realtime subscription on the active job
   useEffect(() => {
     if (!jobId) return;
     const channel = supabase
@@ -70,11 +73,12 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
       });
 
     return () => { supabase.removeChannel(channel); };
-  }, [jobId]); // supabase is stable (useRef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
 
   function handleFile(f: File) {
-    if (f.type !== 'application/pdf') { setError('Format PDF uniquement.'); return; }
-    if (f.size > 50 * 1024 * 1024) { setError('Le fichier dépasse 50 MB.'); return; }
+    if (f.type !== 'application/pdf') { setError(t('pdfOnly')); return; }
+    if (f.size > 50 * 1024 * 1024) { setError(t('tooBig')); return; }
     setError(null);
     setFile(f);
   }
@@ -101,12 +105,12 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
       const res = await fetch('/api/ingest', { method: 'POST', body: fd });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(j.error ?? 'Erreur serveur.');
+        throw new Error(j.error ?? t('serverError'));
       }
       const { jobId: newJobId } = await res.json();
       setJobId(newJobId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue.');
+      setError(err instanceof Error ? err.message : t('unknownError'));
       setJobStatus('error');
     }
   }
@@ -122,7 +126,6 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
 
   return (
     <div>
-      {/* Mode dialog */}
       {showModeDialog && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.45)',
@@ -130,21 +133,20 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
         }}>
           <div style={{ background: C.bone, padding: '36px 40px', maxWidth: 460, width: '100%' }}>
             <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.015em', marginBottom: 10 }}>
-              Structure existante détectée
+              {t('existingStructureTitle')}
             </div>
             <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.55, marginBottom: 28 }}>
-              Une structure de marque existe déjà (v{existing?.version}). Voulez-vous la remplacer ou créer une nouvelle version ?
+              {t('existingStructureBody', { version: existing?.version ?? 0 })}
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <Btn variant="ghost" size="sm" onClick={() => setShowModeDialog(false)}>Annuler</Btn>
-              <Btn variant="secondary" size="sm" onClick={() => startIngestion('version')}>Nouvelle version</Btn>
-              <Btn variant="primary" size="sm" onClick={() => startIngestion('replace')}>Remplacer</Btn>
+              <Btn variant="ghost" size="sm" onClick={() => setShowModeDialog(false)}>{tCommon('cancel')}</Btn>
+              <Btn variant="secondary" size="sm" onClick={() => startIngestion('version')}>{t('newVersion')}</Btn>
+              <Btn variant="primary" size="sm" onClick={() => startIngestion('replace')}>{t('replace')}</Btn>
             </div>
           </div>
         </div>
       )}
 
-      {/* Drop zone */}
       <div
         onDragOver={e => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -164,12 +166,12 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px 6px',
               fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', flexShrink: 0,
             }}>
-              <span style={{ color: C.red }}>PDF</span>
+              <span style={{ color: C.red }}>{t('pdfTag')}</span>
               <span style={{ color: C.muted }}>{(file.size / 1024 / 1024).toFixed(1)} Mo</span>
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', color: C.muted, textTransform: 'uppercase', marginBottom: 6 }}>
-                Fichier sélectionné
+                {t('fileSelected')}
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em' }}>{file.name}</div>
             </div>
@@ -177,20 +179,20 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
         ) : (
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 6 }}>
-              Déposez le PDF ici
+              {t('dropHere')}
             </div>
-            <div style={{ fontSize: 13, color: C.muted }}>PDF uniquement · max 50 MB</div>
+            <div style={{ fontSize: 13, color: C.muted }}>{t('fileHelp')}</div>
           </div>
         )}
         <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
           <input ref={inputRef} type="file" accept="application/pdf" style={{ display: 'none' }}
             onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
           <Btn variant="ghost" size="sm" onClick={() => inputRef.current?.click()}>
-            {file ? 'Changer' : 'Choisir un fichier'}
+            {file ? t('change') : t('choose')}
           </Btn>
           {file && !running && (
             <Btn variant="primary" size="sm" onClick={handleImportClick}>
-              Lancer l&apos;ingestion →
+              {t('launch')}
             </Btn>
           )}
         </div>
@@ -202,19 +204,18 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
           {jobStatus === 'error' && (
             <button onClick={() => { setError(null); setJobStatus('idle'); setJobId(null); setSteps(INITIAL_STEPS); }}
               style={{ marginLeft: 12, background: 'none', border: 'none', color: C.red, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.12em' }}>
-              Réessayer
+              {t('retry')}
             </button>
           )}
         </div>
       )}
 
-      {/* Pipeline stepper */}
       {(running || done || steps.some(s => s.state !== 'pending')) && (
         <div style={{ background: C.white, border: `1px solid ${C.border1}`, padding: '28px 32px', marginBottom: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-            <Eyebrow color={C.muted}>Pipeline · 4 étapes</Eyebrow>
-            {running && <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', color: C.red, textTransform: 'uppercase' }}>● En cours…</div>}
-            {done && <Pill kind="validated">Terminé</Pill>}
+            <Eyebrow color={C.muted}>{t('pipelineHeader')}</Eyebrow>
+            {running && <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', color: C.red, textTransform: 'uppercase' }}>{t('inProgress')}</div>}
+            {done && <Pill kind="validated">{t('done')}</Pill>}
           </div>
 
           <div style={{ height: 2, background: 'rgba(0,0,0,0.1)', marginBottom: 28, position: 'relative' }}>
@@ -239,7 +240,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
                     {isDone ? '✓' : isError ? '✕' : isRunning ? '…' : '—'}
                   </div>
                   <Eyebrow color={isRunning ? C.red : isDone ? C.black : C.muted} style={{ fontSize: 10, marginBottom: 6 }}>
-                    {STEP_LABELS[s.key]}
+                    {tStep(STEP_I18N[s.key])}
                   </Eyebrow>
                   {s.meta && (
                     <div style={{ fontSize: 13, fontWeight: 500, color: isDone ? C.black : C.muted }}>
@@ -256,7 +257,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
       {done && (
         <div style={{ display: 'flex', gap: 12 }}>
           <Btn variant="primary" size="sm" onClick={() => router.push(`/clients/${clientId}/editor`)}>
-            Ouvrir l&apos;éditeur →
+            {t('openEditor')}
           </Btn>
         </div>
       )}

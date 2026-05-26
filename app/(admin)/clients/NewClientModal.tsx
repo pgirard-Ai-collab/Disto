@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { C } from '@/lib/disto';
 import Btn from '@/components/ui/Btn';
 import { createClientRecord, checkSlugAvailable, type ClientEmailInvite } from '@/app/actions/clients';
@@ -10,6 +11,8 @@ import { slugify } from '@/lib/slugify';
 type EmailRow = { email: string; role: 'admin' | 'reader' };
 
 export default function NewClientModal({ onClose }: { onClose: () => void }) {
+  const t = useTranslations('admin.newClientModal');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [slugEdited, setSlugEdited] = useState(false);
@@ -35,11 +38,11 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
     const s = fields.slug;
     if (!s) return;
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s)) {
-      setSlugError('Lettres minuscules, chiffres et tirets seulement.');
+      setSlugError(t('slugInvalid'));
       return;
     }
     const available = await checkSlugAvailable(s);
-    if (!available) setSlugError('Ce slug est déjà utilisé.');
+    if (!available) setSlugError(t('slugTaken'));
     else setSlugError(null);
   }
 
@@ -47,11 +50,11 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
     setLogoError(null);
     if (!file) { setLogoFile(null); return; }
     if (file.size > 2 * 1024 * 1024) {
-      setLogoError('Le logo dépasse 2 MB.');
+      setLogoError(t('logoTooBig'));
       return;
     }
     if (!['image/png', 'image/svg+xml'].includes(file.type)) {
-      setLogoError('PNG ou SVG uniquement.');
+      setLogoError(t('logoBadFormat'));
       return;
     }
     setLogoFile(file);
@@ -71,7 +74,7 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     for (const r of validEmails) {
       if (!emailRegex.test(r.email)) {
-        setServerError(`Email invalide : ${r.email}`);
+        setServerError(`${t('emailInvalid')}${r.email}`);
         return;
       }
     }
@@ -115,51 +118,51 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
     >
       <div style={{ background: C.bone, width: '100%', maxWidth: 560, padding: '36px 40px', maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 28 }}>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>Nouveau client</div>
+          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>{t('title')}</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: C.muted }}>×</button>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <label htmlFor="org_name" style={labelStyle}>Nom de l&apos;organisation *</label>
+            <label htmlFor="org_name" style={labelStyle}>{t('orgLabel')}</label>
             <input
               id="org_name" name="org_name" required
               value={fields.org_name}
               onChange={e => setFields(f => ({ ...f, org_name: e.target.value }))}
-              placeholder="Ex. : Sartiga Inc."
+              placeholder={t('orgPlaceholder')}
               style={inputStyle}
             />
           </div>
 
           <div>
-            <label htmlFor="brand_name" style={labelStyle}>Nom de la marque *</label>
+            <label htmlFor="brand_name" style={labelStyle}>{t('brandLabel')}</label>
             <input
               id="brand_name" name="brand_name" required
               value={fields.brand_name}
               onChange={e => handleBrandChange(e.target.value)}
-              placeholder="Ex. : SARTIGA"
+              placeholder={t('brandPlaceholder')}
               style={inputStyle}
             />
           </div>
 
           <div>
-            <label htmlFor="slug" style={labelStyle}>Slug URL *</label>
+            <label htmlFor="slug" style={labelStyle}>{t('slugLabel')}</label>
             <input
               id="slug" name="slug" required
               value={fields.slug}
               onChange={e => { setSlugEdited(true); setFields(f => ({ ...f, slug: e.target.value })); setSlugError(null); }}
               onBlur={handleSlugBlur}
-              placeholder="ex. sartiga"
+              placeholder={t('slugPlaceholder')}
               style={{ ...inputStyle, borderColor: slugError ? C.red : C.border2 }}
             />
             {slugError
               ? <div style={{ marginTop: 4, fontSize: 11, color: C.red }}>{slugError}</div>
-              : <div style={{ marginTop: 4, fontSize: 11, color: C.muted }}>Utilisé dans l&apos;URL du portail client.</div>
+              : <div style={{ marginTop: 4, fontSize: 11, color: C.muted }}>{t('slugHelp')}</div>
             }
           </div>
 
           <div>
-            <label style={labelStyle}>Logo (optionnel)</label>
+            <label style={labelStyle}>{t('logoLabel')}</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <input
                 ref={logoInputRef} type="file" accept="image/png,image/svg+xml"
@@ -168,17 +171,17 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
               />
               <button type="button" onClick={() => logoInputRef.current?.click()}
                 style={{ ...inputStyle, width: 'auto', padding: '10px 18px', cursor: 'pointer', fontWeight: 700, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {logoFile ? 'Changer' : 'Choisir'}
+                {logoFile ? t('logoChange') : t('logoChoose')}
               </button>
               <span style={{ fontSize: 12, color: C.muted }}>
-                {logoFile ? `${logoFile.name} · ${(logoFile.size / 1024).toFixed(0)} Ko` : 'PNG ou SVG · max 2 MB'}
+                {logoFile ? `${logoFile.name} · ${(logoFile.size / 1024).toFixed(0)} Ko` : t('logoHelp')}
               </span>
             </div>
             {logoError && <div style={{ marginTop: 4, fontSize: 11, color: C.red }}>{logoError}</div>}
           </div>
 
           <div>
-            <label style={labelStyle}>Email(s) admin client (optionnel)</label>
+            <label style={labelStyle}>{t('adminEmailsLabel')}</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {emails.map((row, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8 }}>
@@ -186,7 +189,7 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
                     type="email"
                     value={row.email}
                     onChange={e => updateEmail(i, { email: e.target.value })}
-                    placeholder="prenom.nom@marque.co"
+                    placeholder={t('adminEmailPlaceholder')}
                     style={{ ...inputStyle, flex: 1 }}
                   />
                   <select
@@ -194,8 +197,8 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
                     onChange={e => updateEmail(i, { role: e.target.value as 'admin' | 'reader' })}
                     style={{ ...inputStyle, width: 130 }}
                   >
-                    <option value="admin">Admin</option>
-                    <option value="reader">Lecteur</option>
+                    <option value="admin">{t('roleAdmin')}</option>
+                    <option value="reader">{t('roleReader')}</option>
                   </select>
                   {emails.length > 1 && (
                     <button type="button" onClick={() => removeEmail(i)}
@@ -205,7 +208,7 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
               ))}
               <button type="button" onClick={addEmail}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.red, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'left', padding: 0, alignSelf: 'flex-start' }}>
-                + Ajouter un email
+                {t('addEmail')}
               </button>
             </div>
           </div>
@@ -217,9 +220,9 @@ export default function NewClientModal({ onClose }: { onClose: () => void }) {
           )}
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 8 }}>
-            <Btn variant="ghost" size="sm" onClick={onClose}>Annuler</Btn>
+            <Btn variant="ghost" size="sm" onClick={onClose}>{tCommon('cancel')}</Btn>
             <Btn variant="primary" size="sm" disabled={isPending || !!slugError}>
-              {isPending ? 'Création…' : 'Créer le client'}
+              {isPending ? t('creating') : t('create')}
             </Btn>
           </div>
         </form>

@@ -2,18 +2,14 @@
 
 import { C } from '@/lib/disto';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/browser';
 import { logout } from '@/app/actions/logout';
+import LanguageToggleMenu from '@/components/i18n/LanguageToggleMenu';
 
 interface UserMenuProps {
   theme?: 'dark' | 'light';
 }
-
-const ROLE_LABELS: Record<string, string> = {
-  agency_admin: 'Agence Admin',
-  client_admin: 'Admin',
-  client_reader: 'Lecteur',
-};
 
 function getInitials(name: string): string {
   return name
@@ -25,8 +21,9 @@ function getInitials(name: string): string {
 }
 
 export default function UserMenu({ theme = 'light' }: UserMenuProps) {
+  const t = useTranslations('userMenu');
   const [name, setName] = useState('');
-  const [roleLabel, setRoleLabel] = useState('');
+  const [role, setRole] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,7 +39,7 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
         user.user_metadata?.full_name ||
         user.user_metadata?.name ||
         user.email?.split('@')[0] ||
-        'Utilisateur';
+        t('fallbackName');
       setName(fullName);
 
       const { data: profile } = await supabase
@@ -51,10 +48,10 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
         .eq('id', user.id)
         .single();
       if (profile?.role) {
-        setRoleLabel(ROLE_LABELS[profile.role] ?? profile.role);
+        setRole(profile.role);
       }
     });
-  }, []);
+  }, [t]);
 
   // Close on outside click
   useEffect(() => {
@@ -69,6 +66,14 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
 
   const initials = name ? getInitials(name) : '…';
   const displayName = name || '…';
+  const roleLabel = (() => {
+    switch (role) {
+      case 'agency_admin': return t('role.agency_admin');
+      case 'client_admin': return t('role.client_admin');
+      case 'client_reader': return t('role.client_reader');
+      default: return role ?? '';
+    }
+  })();
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -93,7 +98,7 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
           flexShrink: 0,
           outline: open ? `2px solid ${C.red}` : 'none',
         }}
-        aria-label="Menu utilisateur"
+        aria-label={t('menuLabel')}
         aria-expanded={open}
       >
         {initials}
@@ -105,7 +110,7 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
           position: 'absolute',
           top: 'calc(100% + 8px)',
           right: 0,
-          minWidth: 180,
+          minWidth: 220,
           background: theme === 'light' ? '#fff' : C.ink,
           border: `1px solid ${theme === 'light' ? C.border1 : C.line}`,
           boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
@@ -119,6 +124,9 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
             <div style={{ fontSize: 13, fontWeight: 700, color: fg }}>{displayName}</div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{roleLabel}</div>
           </div>
+
+          {/* Language toggle */}
+          <LanguageToggleMenu theme={theme} />
 
           {/* Logout */}
           <form action={logout}>
@@ -134,7 +142,7 @@ export default function UserMenu({ theme = 'light' }: UserMenuProps) {
                 fontFamily: 'Archivo, sans-serif',
               }}
             >
-              Se déconnecter →
+              {t('logout')}
             </button>
           </form>
         </div>
