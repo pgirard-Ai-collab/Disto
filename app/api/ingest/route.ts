@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import 'pdf-parse/worker';
 import { PDFParse } from 'pdf-parse';
+import { CanvasFactory } from 'pdf-parse/worker';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { parseLlmJson } from '@/lib/parse-llm-json';
 
@@ -72,7 +74,7 @@ async function runPipeline(
     let pdfText = '';
     let useVision = false;
     try {
-      const parser = new PDFParse({ data: new Uint8Array(fileBuffer) });
+      const parser = new PDFParse({ data: new Uint8Array(fileBuffer), CanvasFactory });
       const result = await parser.getText();
       pdfText = result.text ?? '';
       await parser.destroy();
