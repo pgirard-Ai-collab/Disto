@@ -54,6 +54,13 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
   const running = jobStatus === 'pending' || jobStatus === 'running';
   const done = jobStatus === 'done';
 
+  function applyJobRow(row: { status: string; steps: Step[] | null; error: string | null }) {
+    setSteps(row.steps ?? INITIAL_STEPS);
+    setJobStatus(row.status);
+    if (row.error) setError(row.error);
+  }
+
+  // Fast path: Supabase Realtime pushes UPDATEs as they happen.
   useEffect(() => {
     if (!jobId) return;
     const channel = supabase
@@ -62,10 +69,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'ingestion_jobs', filter: `id=eq.${jobId}` },
         (payload) => {
-          const row = payload.new as { status: string; steps: Step[]; error: string | null };
-          setSteps(row.steps ?? INITIAL_STEPS);
-          setJobStatus(row.status);
-          if (row.error) setError(row.error);
+          applyJobRow(payload.new as { status: string; steps: Step[] | null; error: string | null });
         },
       )
       .subscribe((status, err) => {
@@ -75,6 +79,29 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
+
+  // Fallback: poll the job row while it is in flight, so the UI refreshes
+  // even if Realtime delivers nothing. Stops automatically once done/error.
+  useEffect(() => {
+    if (!jobId) return;
+    if (jobStatus !== 'pending' && jobStatus !== 'running') return;
+
+    let cancelled = false;
+    const tick = async () => {
+      const { data } = await supabase
+        .from('ingestion_jobs')
+        .select('status, steps, error')
+        .eq('id', jobId)
+        .maybeSingle();
+      if (!cancelled && data) applyJobRow(data as { status: string; steps: Step[] | null; error: string | null });
+    };
+
+    const interval = setInterval(tick, 2000);
+    tick(); // immediate first fetch so the user sees state without waiting 2s
+
+    return () => { cancelled = true; clearInterval(interval); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId, jobStatus]);
 
   function handleFile(f: File) {
     if (f.type !== 'application/pdf') { setError(t('pdfOnly')); return; }
