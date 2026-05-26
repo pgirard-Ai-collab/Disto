@@ -24,13 +24,34 @@ export async function proxy(req: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // getUser() refreshes the session. A stale/rotated/missing refresh token makes
+  // it throw AuthApiError (refresh_token_not_found) — that just means "no valid
+  // session", so treat it as logged-out rather than letting it bubble up.
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   const publicPaths = ['/login', '/forgot-password', '/set-password', '/update-password'];
   const isAuthRoute = pathname.startsWith('/login');
   const isPublicRoute = publicPaths.some(p => pathname.startsWith(p));
   const isAdminRoute = pathname.startsWith('/clients');
   const isClientRoute = !isPublicRoute && !isAdminRoute && pathname !== '/';
+
+  // Clears stale Supabase auth cookies on the given response so a dead session
+  // doesn't re-trigger the refresh error on every subsequent request.
+  function clearAuthCookies(res: NextResponse) {
+    for (const { name } of req.cookies.getAll()) {
+      if (name.startsWith('sb-')) res.cookies.delete(name);
+    }
+    return res;
+  }
+
+  // Invalid/expired refresh token: drop the bad cookies. Redirect to login if the
+  // route is protected; otherwise let the request through as anonymous.
+  if (authError) {
+    if (!isPublicRoute && (isAdminRoute || isClientRoute)) {
+      return clearAuthCookies(NextResponse.redirect(new URL('/login', req.nextUrl)));
+    }
+    return clearAuthCookies(response);
+  }
 
   // Unauthenticated user trying to access protected route
   if (!user && !isPublicRoute && (isAdminRoute || isClientRoute)) {
