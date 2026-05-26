@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import 'pdf-parse/worker';
 import { PDFParse } from 'pdf-parse';
@@ -219,12 +219,18 @@ export async function POST(req: NextRequest) {
   const fileName = file.name;
   const fileSize = file.size;
 
-  // Fire-and-forget — pipeline updates ingestion_jobs which the client watches via Realtime
-  runPipeline(admin, job.id, clientId, client.slug, buffer, fileName, fileSize, mode)
-    .catch(err => {
-      // Already handled inside runPipeline, this is a final safety net
-      console.error('Ingestion pipeline crashed:', err);
-    });
+  // Run the pipeline AFTER the response is sent. On Vercel a serverless function is
+  // frozen the moment the response returns, so a bare un-awaited promise is abandoned
+  // mid-flight (job sticks on "running" forever). `after()` is backed by waitUntil and
+  // keeps the invocation alive until the pipeline settles, bounded by maxDuration above.
+  // The client watches ingestion_jobs via Realtime + polling for step progress.
+  after(
+    runPipeline(admin, job.id, clientId, client.slug, buffer, fileName, fileSize, mode)
+      .catch(err => {
+        // Already handled inside runPipeline, this is a final safety net
+        console.error('Ingestion pipeline crashed:', err);
+      }),
+  );
 
   return NextResponse.json({ jobId: job.id });
 }

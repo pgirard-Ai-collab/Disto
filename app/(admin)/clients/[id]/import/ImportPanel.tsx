@@ -112,6 +112,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault(); setDragging(false);
+    if (running) return;
     const f = e.dataTransfer.files[0];
     if (f) handleFile(f);
   }
@@ -175,7 +176,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
       )}
 
       <div
-        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragOver={e => { e.preventDefault(); if (!running) setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         style={{
@@ -214,7 +215,9 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
         <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
           <input ref={inputRef} type="file" accept="application/pdf" style={{ display: 'none' }}
             onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
-          <Btn variant="ghost" size="sm" onClick={() => inputRef.current?.click()}>
+          <Btn variant="ghost" size="sm" disabled={running}
+            onClick={() => { if (!running) inputRef.current?.click(); }}
+            style={running ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}>
             {file ? t('change') : t('choose')}
           </Btn>
           {file && !running && (
