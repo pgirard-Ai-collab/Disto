@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/email/send';
+import { inviteEmailHtml, inviteSubject } from '@/lib/email/templates/invite';
+import { resetPasswordEmailHtml, resetPasswordSubject } from '@/lib/email/templates/reset-password';
 
 export type ResendInviteResult =
   | { success: true }
@@ -39,28 +42,43 @@ export async function resendInvite(
 
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
 
-  const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
-    targetUser.email,
-    { redirectTo },
-  );
+  const { data: inviteData, error: inviteError } = await admin.auth.admin.generateLink({
+    type: 'invite',
+    email: targetUser.email,
+    options: { redirectTo },
+  });
 
-  if (inviteError) {
+  if (!inviteError && inviteData) {
+    const actionLink = inviteData.properties.action_link;
+    await sendEmail({
+      to: targetUser.email,
+      subject: inviteSubject,
+      html: inviteEmailHtml({ actionLink, email: targetUser.email }),
+      actionLink,
+    });
+  } else if (inviteError) {
     if (!inviteError.message.toLowerCase().includes('already')) {
       return { success: false, error: t('resendFailed') };
     }
 
-    // User already has an auth account — send a password reset email pointing to /set-password.
-    const { error: resetError } = await admin.auth.resetPasswordForEmail(
-      targetUser.email,
-      { redirectTo },
-    );
+    // User already confirmed — send a password reset link instead.
+    const { data: resetData, error: resetError } = await admin.auth.admin.generateLink({
+      type: 'recovery',
+      email: targetUser.email,
+      options: { redirectTo },
+    });
 
-    if (resetError) {
-      if (resetError.message.toLowerCase().includes('rate limit') || resetError.message.includes('seconds')) {
-        return { success: false, error: t('rateLimit') };
-      }
+    if (resetError || !resetData) {
       return { success: false, error: t('resendFailed') };
     }
+
+    const actionLink = resetData.properties.action_link;
+    await sendEmail({
+      to: targetUser.email,
+      subject: resetPasswordSubject,
+      html: resetPasswordEmailHtml({ actionLink, email: targetUser.email }),
+      actionLink,
+    });
   }
 
   await admin

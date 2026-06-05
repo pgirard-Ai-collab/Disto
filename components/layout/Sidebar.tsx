@@ -149,7 +149,10 @@ export default function Sidebar({ variant = 'agency', brand, clientId, hasPublis
         { id: 'access', n: '04', label: tSidebar('agency_access'), href: `/clients/${clientId}/access` },
       );
       if (hasPublishedVersion) {
-        items.push({ id: 'system-prompt', n: '05', label: tSidebar('agency_systemPrompt'), href: `/clients/${clientId}/system-prompt` });
+        items.push(
+          { id: 'system-prompt', n: '05', label: tSidebar('agency_systemPrompt'), href: `/clients/${clientId}/system-prompt` },
+          { id: 'chat', n: '06', label: tSidebar('agency_chat'), href: `/clients/${clientId}/chat` },
+        );
       }
     }
     return items;

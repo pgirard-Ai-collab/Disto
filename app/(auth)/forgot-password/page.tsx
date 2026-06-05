@@ -7,7 +7,7 @@ import AuthBrandPanel from '@/components/layout/AuthBrandPanel';
 import LanguageToggleAuth from '@/components/i18n/LanguageToggleAuth';
 import { useState, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
-import { createClient } from '@/lib/supabase/browser';
+import { forgotPassword } from '@/app/actions/forgot-password';
 import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
@@ -18,13 +18,7 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus('loading');
-
-    const supabase = createClient();
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`,
-    });
-
-    // Always show success to prevent email enumeration
+    await forgotPassword(email);
     setStatus('sent');
   }
 

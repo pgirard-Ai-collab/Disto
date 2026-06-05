@@ -27,6 +27,9 @@ const INITIAL_STEPS: Step[] = [
   { key: 'save',    state: 'pending' },
 ];
 
+const MAX_FILES = 10;
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
 type ExistingStructure = { id: string; version: number; status: string } | null;
 type ActiveJob = { id: string; status: string; steps: Step[]; error: string | null };
 
@@ -41,7 +44,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
   const tCommon = useTranslations('common');
   const tStep = useTranslations('admin.import.step');
   const router = useRouter();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
   const [steps, setSteps] = useState<Step[]>(activeJob?.steps ?? INITIAL_STEPS);
   const [jobId, setJobId] = useState<string | null>(activeJob?.id ?? null);
@@ -60,7 +63,6 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
     if (row.error) setError(row.error);
   }
 
-  // Fast path: Supabase Realtime pushes UPDATEs as they happen.
   useEffect(() => {
     if (!jobId) return;
     const channel = supabase
@@ -80,8 +82,6 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
-  // Fallback: poll the job row while it is in flight, so the UI refreshes
-  // even if Realtime delivers nothing. Stops automatically once done/error.
   useEffect(() => {
     if (!jobId) return;
     if (jobStatus !== 'pending' && jobStatus !== 'running') return;
@@ -97,35 +97,55 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
     };
 
     const interval = setInterval(tick, 2000);
-    tick(); // immediate first fetch so the user sees state without waiting 2s
+    tick();
 
     return () => { cancelled = true; clearInterval(interval); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId, jobStatus]);
 
-  function handleFile(f: File) {
-    if (f.type !== 'application/pdf') { setError(t('pdfOnly')); return; }
-    if (f.size > 50 * 1024 * 1024) { setError(t('tooBig')); return; }
-    setError(null);
-    setFile(f);
+  function addFiles(incoming: FileList | File[]) {
+    const list = Array.from(incoming);
+    const errors: string[] = [];
+    const valid: File[] = [];
+
+    for (const f of list) {
+      if (f.type !== 'application/pdf') { errors.push(t('pdfOnly')); continue; }
+      if (f.size > MAX_FILE_SIZE) { errors.push(t('tooBig')); continue; }
+      valid.push(f);
+    }
+
+    setFiles(prev => {
+      const combined = [...prev, ...valid];
+      if (combined.length > MAX_FILES) {
+        errors.push(t('tooManyFiles', { max: MAX_FILES }));
+        return combined.slice(0, MAX_FILES);
+      }
+      return combined;
+    });
+
+    if (errors.length) setError(errors[0]);
+    else setError(null);
+  }
+
+  function removeFile(index: number) {
+    setFiles(prev => prev.filter((_, i) => i !== index));
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault(); setDragging(false);
     if (running) return;
-    const f = e.dataTransfer.files[0];
-    if (f) handleFile(f);
+    addFiles(e.dataTransfer.files);
   }
 
   async function startIngestion(selectedMode: 'replace' | 'version') {
-    if (!file) return;
+    if (files.length === 0) return;
     setShowModeDialog(false);
     setError(null);
     setSteps(INITIAL_STEPS);
     setJobStatus('pending');
 
     const fd = new FormData();
-    fd.append('file', file);
+    for (const f of files) fd.append('files', f);
     fd.append('clientId', clientId);
     fd.append('mode', selectedMode);
 
@@ -144,13 +164,17 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
   }
 
   function handleImportClick() {
-    if (!file) return;
+    if (files.length === 0) return;
     if (existing) { setShowModeDialog(true); return; }
     startIngestion('replace');
   }
 
   const doneCount = steps.filter(s => s.state === 'done').length;
   const progressPct = (doneCount / steps.length) * 100;
+
+  const launchLabel = files.length > 1
+    ? t('launchMulti', { n: files.length })
+    : t('launch');
 
   return (
     <div>
@@ -175,6 +199,7 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
         </div>
       )}
 
+      {/* Drop zone */}
       <div
         onDragOver={e => { e.preventDefault(); if (!running) setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -184,56 +209,101 @@ export default function ImportPanel({ clientId, existing, activeJob }: Props) {
           background: dragging ? 'rgba(240,45,20,0.03)' : C.white,
           padding: '28px 32px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 24, marginBottom: 32, transition: 'border-color 0.15s',
+          gap: 24, marginBottom: files.length > 0 ? 0 : 32, transition: 'border-color 0.15s',
         }}
       >
-        {file ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22, flex: 1 }}>
-            <div style={{
-              width: 58, height: 74, background: C.bone, border: `1.5px solid ${C.black}`,
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '8px 6px',
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', flexShrink: 0,
-            }}>
-              <span style={{ color: C.red }}>{t('pdfTag')}</span>
-              <span style={{ color: C.muted }}>{(file.size / 1024 / 1024).toFixed(1)} Mo</span>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', color: C.muted, textTransform: 'uppercase', marginBottom: 6 }}>
-                {t('fileSelected')}
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em' }}>{file.name}</div>
-            </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 6 }}>
+            {t('dropHere')}
           </div>
-        ) : (
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 6 }}>
-              {t('dropHere')}
-            </div>
-            <div style={{ fontSize: 13, color: C.muted }}>{t('fileHelp')}</div>
-          </div>
-        )}
+          <div style={{ fontSize: 13, color: C.muted }}>{t('fileHelp')}</div>
+        </div>
         <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-          <input ref={inputRef} type="file" accept="application/pdf" style={{ display: 'none' }}
-            onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
-          <Btn variant="ghost" size="sm" disabled={running}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf"
+            multiple
+            style={{ display: 'none' }}
+            onChange={e => { if (e.target.files) { addFiles(e.target.files); e.target.value = ''; } }}
+          />
+          <Btn
+            variant="ghost"
+            size="sm"
+            disabled={running}
             onClick={() => { if (!running) inputRef.current?.click(); }}
-            style={running ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}>
-            {file ? t('change') : t('choose')}
+            style={running ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+          >
+            {t('addFiles')}
           </Btn>
-          {file && !running && (
+          {files.length > 0 && !running && (
             <Btn variant="primary" size="sm" onClick={handleImportClick}>
-              {t('launch')}
+              {launchLabel}
             </Btn>
           )}
         </div>
       </div>
 
+      {/* File list */}
+      {files.length > 0 && (
+        <div style={{
+          border: `1.5px solid rgba(0,0,0,0.12)`,
+          borderTop: 'none',
+          maxHeight: 220,
+          overflowY: 'auto',
+          marginBottom: 32,
+        }}>
+          {files.map((f, i) => (
+            <div
+              key={`${f.name}-${f.size}-${i}`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '10px 16px',
+                borderBottom: i < files.length - 1 ? `1px solid rgba(0,0,0,0.08)` : 'none',
+                background: C.white,
+              }}
+            >
+              {/* PDF badge */}
+              <div style={{
+                width: 32, height: 40, background: C.bone, border: `1.5px solid ${C.black}`,
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                padding: '4px 4px', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', flexShrink: 0,
+              }}>
+                <span style={{ color: C.red }}>{t('pdfTag')}</span>
+                <span style={{ color: C.muted }}>{(f.size / 1024 / 1024).toFixed(1)}M</span>
+              </div>
+              {/* File name */}
+              <div style={{ flex: 1, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {f.name}
+              </div>
+              {/* Size */}
+              <div style={{ fontSize: 11, color: C.muted, flexShrink: 0 }}>
+                {(f.size / 1024 / 1024).toFixed(1)} Mo
+              </div>
+              {/* Remove */}
+              {!running && (
+                <Btn
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeFile(i)}
+                  style={{ padding: '2px 8px', flexShrink: 0 }}
+                >
+                  ×
+                </Btn>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {error && (
         <div style={{ padding: '12px 16px', background: 'rgba(240,45,20,0.08)', color: C.red, fontSize: 13, marginBottom: 24 }}>
           {error}
           {jobStatus === 'error' && (
-            <button onClick={() => { setError(null); setJobStatus('idle'); setJobId(null); setSteps(INITIAL_STEPS); }}
-              style={{ marginLeft: 12, background: 'none', border: 'none', color: C.red, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.12em' }}>
+            <button
+              onClick={() => { setError(null); setJobStatus('idle'); setJobId(null); setSteps(INITIAL_STEPS); }}
+              style={{ marginLeft: 12, background: 'none', border: 'none', color: C.red, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.12em' }}
+            >
               {t('retry')}
             </button>
           )}

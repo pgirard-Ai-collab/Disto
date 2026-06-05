@@ -8,7 +8,7 @@ import type { PillKind } from '@/lib/disto';
 import Btn from '@/components/ui/Btn';
 import Pill from '@/components/ui/Pill';
 import NewClientModal from './NewClientModal';
-import { archiveClient, activateClient } from '@/app/actions/clients';
+import { archiveClient, activateClient, deleteClient } from '@/app/actions/clients';
 
 type Client = {
   id: string;
@@ -32,6 +32,7 @@ const STATUS_FOR_FILTER: Record<Filter, string | null> = {
 type ConfirmDialog =
   | { mode: 'archive'; id: string; name: string }
   | { mode: 'activate'; id: string; name: string }
+  | { mode: 'delete'; id: string; name: string }
   | null;
 
 export default function ClientsTable({ clients }: { clients: Client[] }) {
@@ -47,27 +48,50 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
   const [filter, setFilter] = useState<Filter>('all');
   const [showModal, setShowModal] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmDialog>(null);
+  const [deleteInput, setDeleteInput] = useState('');
   const [isPending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [localClients, setLocalClients] = useState(clients);
 
-  const filtered = clients.filter(c => {
+  const filtered = localClients.filter(c => {
     const f = STATUS_FOR_FILTER[filter];
     return f === null || c.status === f;
   });
 
   const counts: Record<Filter, number> = {
-    all: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    draft: clients.filter(c => c.status === 'draft').length,
-    archived: clients.filter(c => c.status === 'archived').length,
+    all: localClients.length,
+    active: localClients.filter(c => c.status === 'active').length,
+    draft: localClients.filter(c => c.status === 'draft').length,
+    archived: localClients.filter(c => c.status === 'archived').length,
   };
+
+  function closeConfirm() {
+    setConfirm(null);
+    setDeleteInput('');
+    setActionError(null);
+  }
 
   function runAction() {
     if (!confirm) return;
+    if (confirm.mode === 'delete') {
+      const { id, name } = confirm;
+      closeConfirm();
+      startTransition(async () => {
+        const result = await deleteClient(id);
+        if (!result.success) {
+          setActionError(result.error);
+        } else {
+          setLocalClients(prev => prev.filter(c => c.id !== id));
+          setSuccessMessage(t('deleteSuccess', { name }));
+          setTimeout(() => setSuccessMessage(null), 4000);
+        }
+      });
+      return;
+    }
     const action = confirm.mode === 'archive' ? archiveClient : activateClient;
     const id = confirm.id;
-    setConfirm(null);
-    setActionError(null);
+    closeConfirm();
     startTransition(async () => {
       const result = await action(id);
       if (!result.success) setActionError(result.error);
@@ -85,22 +109,59 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
         }}>
           <div style={{ background: C.bone, padding: '36px 40px', maxWidth: 420, width: '100%' }}>
             <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.015em', marginBottom: 10 }}>
-              {confirm.mode === 'archive' ? t('archiveConfirmTitle') : t('unarchiveConfirmTitle')}
+              {confirm.mode === 'delete'
+                ? t('deleteConfirmTitle', { name: confirm.name })
+                : confirm.mode === 'archive' ? t('archiveConfirmTitle') : t('unarchiveConfirmTitle')}
             </div>
             <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.55, marginBottom: 28 }}>
-              {t.rich(
-                confirm.mode === 'archive' ? 'archiveConfirmBody' : 'unarchiveConfirmBody',
-                {
-                  name: confirm.name,
-                  strong: (chunks) => <strong style={{ color: C.black }}>{chunks}</strong>,
-                },
-              )}
+              {confirm.mode === 'delete'
+                ? t('deleteConfirmBody')
+                : t.rich(
+                    confirm.mode === 'archive' ? 'archiveConfirmBody' : 'unarchiveConfirmBody',
+                    {
+                      name: confirm.name,
+                      strong: (chunks) => <strong style={{ color: C.black }}>{chunks}</strong>,
+                    },
+                  )}
             </div>
+            {confirm.mode === 'delete' && (
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.muted, marginBottom: 8 }}>
+                  {t('deleteConfirmInputLabel')}
+                </label>
+                <input
+                  type="text"
+                  value={deleteInput}
+                  onChange={e => setDeleteInput(e.target.value)}
+                  autoFocus
+                  style={{
+                    width: '100%', padding: '10px 12px', fontSize: 14,
+                    border: `1px solid ${C.border2}`, background: C.white,
+                    color: C.black, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                {actionError && (
+                  <div style={{ color: C.red, fontSize: 12, marginTop: 8 }}>{actionError}</div>
+                )}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <Btn variant="ghost" size="sm" onClick={() => setConfirm(null)}>{tCommon('cancel')}</Btn>
-              <Btn variant="primary" size="sm" onClick={runAction} disabled={isPending}>
-                {confirm.mode === 'archive' ? t('archive') : t('unarchive')}
-              </Btn>
+              <Btn variant="ghost" size="sm" onClick={closeConfirm}>{tCommon('cancel')}</Btn>
+              {confirm.mode === 'delete' ? (
+                <Btn
+                  variant="primary"
+                  size="sm"
+                  onClick={runAction}
+                  disabled={isPending || deleteInput !== confirm.name}
+                  style={{ background: C.red, borderColor: C.red }}
+                >
+                  {t('delete')}
+                </Btn>
+              ) : (
+                <Btn variant="primary" size="sm" onClick={runAction} disabled={isPending}>
+                  {confirm.mode === 'archive' ? t('archive') : t('unarchive')}
+                </Btn>
+              )}
             </div>
           </div>
         </div>
@@ -129,6 +190,12 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
         </div>
         <Btn variant="primary" size="sm" onClick={() => setShowModal(true)}>{t('newClient')}</Btn>
       </div>
+
+      {successMessage && (
+        <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.04)', color: C.black, fontSize: 13, marginBottom: 16 }}>
+          {successMessage}
+        </div>
+      )}
 
       {actionError && (
         <div style={{ padding: '10px 14px', background: 'rgba(240,45,20,0.08)', color: C.red, fontSize: 13, marginBottom: 16 }}>
@@ -178,7 +245,7 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
                 <Pill kind={c.status}>{tStatus(c.status)}</Pill>
               </span>
               <span style={{ color: C.muted, fontSize: 13 }}>{formatDate(c.updated_at)}</span>
-              <span style={{ textAlign: 'right' }}>
+              <span style={{ textAlign: 'right', display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
                 {c.status === 'archived' ? (
                   <button
                     onClick={() => setConfirm({ mode: 'activate', id: c.id, name: c.brand_name })}
@@ -196,6 +263,13 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
                     {t('archive')}
                   </button>
                 )}
+                <button
+                  onClick={() => { setDeleteInput(''); setConfirm({ mode: 'delete', id: c.id, name: c.brand_name }); }}
+                  disabled={isPending}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.red, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                >
+                  {t('delete')}
+                </button>
               </span>
             </div>
           ))}

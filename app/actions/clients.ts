@@ -3,13 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/email/send';
+import { inviteEmailHtml, inviteSubject } from '@/lib/email/templates/invite';
 
 export type ClientEmailInvite = { email: string; role: 'admin' | 'reader' };
 
 type ErrorKey =
   | 'unauthenticated' | 'accessDenied' | 'generic' | 'genericCreate'
   | 'orgRequired' | 'slugInvalid' | 'slugTaken' | 'invitesInvalid'
-  | 'logoTooBig' | 'logoBadFormat' | 'archiveFailed' | 'unarchiveFailed';
+  | 'logoTooBig' | 'logoBadFormat' | 'archiveFailed' | 'unarchiveFailed' | 'deleteFailed';
 
 async function tErrors() {
   return getTranslations('serverActions.errors');
@@ -91,14 +93,26 @@ export async function createClientRecord(formData: FormData): Promise<ClientActi
 
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
   for (const inv of invites) {
-    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(inv.email, { redirectTo });
-    if (inviteError || !invited?.user) continue;
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'invite',
+      email: inv.email,
+      options: { redirectTo },
+    });
+    if (linkError || !linkData?.user) continue;
+
+    const actionLink = linkData.properties.action_link;
+    await sendEmail({
+      to: inv.email,
+      subject: inviteSubject,
+      html: inviteEmailHtml({ actionLink, email: inv.email }),
+      actionLink,
+    });
 
     const profileRole = inv.role === 'admin' ? 'client_admin' : 'client_reader';
-    await admin.from('profiles').upsert({ id: invited.user.id, role: profileRole, brand_slug: slug });
+    await admin.from('profiles').upsert({ id: linkData.user.id, role: profileRole, brand_slug: slug });
     await admin.from('client_users').upsert({
       client_id: insertedClient.id,
-      user_id: invited.user.id,
+      user_id: linkData.user.id,
       role: inv.role,
       status: 'invited',
     });
@@ -139,6 +153,22 @@ export async function activateClient(clientId: string): Promise<ClientActionResu
 
   revalidatePath('/clients');
   revalidatePath(`/clients/${clientId}`);
+  return { success: true };
+}
+
+export async function deleteClient(clientId: string): Promise<ClientActionResult> {
+  const t = await tErrors();
+  const { error, admin } = await requireAgencyAdmin();
+  if (error || !admin) return { success: false, error: error ?? t('generic') };
+
+  const { error: dbError } = await admin
+    .from('clients')
+    .delete()
+    .eq('id', clientId);
+
+  if (dbError) return fail(t, 'deleteFailed');
+
+  revalidatePath('/clients');
   return { success: true };
 }
 

@@ -2,6 +2,8 @@
 
 import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/email/send';
+import { inviteEmailHtml, inviteSubject } from '@/lib/email/templates/invite';
 
 export type InviteUserResult =
   | { success: true }
@@ -37,7 +39,11 @@ export async function inviteUser(
   const clientRole = role === 'client_admin' ? 'admin' : 'reader';
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
 
-  const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
+  const { data, error: inviteError } = await admin.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { redirectTo },
+  });
 
   if (inviteError) {
     if (inviteError.message.includes('already registered')) {
@@ -45,6 +51,14 @@ export async function inviteUser(
     }
     return { success: false, error: t('inviteFailed') };
   }
+
+  const actionLink = data.properties.action_link;
+  await sendEmail({
+    to: email,
+    subject: inviteSubject,
+    html: inviteEmailHtml({ actionLink, email }),
+    actionLink,
+  });
 
   const { error: profileError } = await admin
     .from('profiles')
