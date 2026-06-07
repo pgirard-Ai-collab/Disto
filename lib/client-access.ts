@@ -14,7 +14,7 @@ export type ClientAccess = {
  * Verifies the current user has access to the requested brand.
  * - Unauthenticated → redirect to /login
  * - Agency admins → allowed, role='agency_admin'
- * - Client users → must have an active client_users row for this brand AND profiles.brand_slug must match
+ * - Client users → must have an active client_users row for this brand (joined via clients.slug)
  * - Otherwise → return null (caller can call notFound())
  */
 export async function requireBrandAccess(brandSlug: string): Promise<ClientAccess | null> {
@@ -24,7 +24,7 @@ export async function requireBrandAccess(brandSlug: string): Promise<ClientAcces
   if (!user) redirect('/login');
 
   const [profileRes, clientRes] = await Promise.all([
-    supabase.from('profiles').select('role, brand_slug').eq('id', user.id).single(),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
     supabase.from('clients').select('id, brand_name').eq('slug', brandSlug).maybeSingle(),
   ]);
   const { data: profile, error: profileErr } = profileRes;
@@ -51,14 +51,7 @@ export async function requireBrandAccess(brandSlug: string): Promise<ClientAcces
     };
   }
 
-  // Client user → must be linked to THIS brand AND profile slug must match
-  if (profile.brand_slug !== brandSlug) {
-    console.warn('[client-access] brand_slug mismatch', {
-      userId: user.id, profileSlug: profile.brand_slug, requestedSlug: brandSlug, role: profile.role,
-    });
-    return null;
-  }
-
+  // Client user → must have an active client_users row for this brand
   const { data: clientUser, error: cuErr } = await supabase
     .from('client_users')
     .select('role, status')
@@ -83,4 +76,32 @@ export async function requireBrandAccess(brandSlug: string): Promise<ClientAcces
     role: clientUser.role as 'admin' | 'reader',
     isAdmin: clientUser.role === 'admin',
   };
+}
+
+/**
+ * Returns the list of active brands for the current user.
+ * Agency admins get an empty array (they navigate differently).
+ * Used by login routing and the Sidebar brand-switcher.
+ */
+export async function getMyBrands(): Promise<{ slug: string; brandName: string; orgName: string }[]> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('client_users')
+    .select('clients(slug, brand_name, org_name)')
+    .eq('user_id', user.id)
+    .eq('status', 'active');
+
+  if (error || !data) return [];
+
+  return data
+    .map(row => {
+      const c = row.clients as unknown as { slug: string; brand_name: string; org_name: string } | null;
+      if (!c) return null;
+      return { slug: c.slug, brandName: c.brand_name, orgName: c.org_name };
+    })
+    .filter((b): b is { slug: string; brandName: string; orgName: string } => b !== null);
 }

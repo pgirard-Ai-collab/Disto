@@ -49,14 +49,29 @@ export default function LoginPage() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, brand_slug')
+      .select('role')
       .eq('id', user.id)
       .single();
 
     if (profile?.role === 'agency_admin') {
       router.push('/clients');
-    } else if (profile?.brand_slug) {
-      router.push(`/${profile.brand_slug}`);
+      return;
+    }
+
+    const { data: brandRows } = await supabase
+      .from('client_users')
+      .select('clients(slug)')
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+
+    const slugs = (brandRows ?? [])
+      .map(r => (r.clients as unknown as { slug: string } | null)?.slug)
+      .filter((s): s is string => !!s);
+
+    if (slugs.length === 1) {
+      router.push(`/${slugs[0]}`);
+    } else if (slugs.length > 1) {
+      router.push('/select-brand');
     } else {
       setError(t('errors.noPortal'));
       setLoading(false);

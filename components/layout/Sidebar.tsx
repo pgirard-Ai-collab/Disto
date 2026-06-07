@@ -2,10 +2,13 @@
 
 import { C } from '@/lib/disto';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Eyebrow from '@/components/ui/Eyebrow';
+import { createClient } from '@/lib/supabase/browser';
+
+type BrandOption = { slug: string; brandName: string; orgName: string };
 
 type SidebarVariant = 'agency' | 'client';
 
@@ -19,13 +22,33 @@ interface SidebarProps {
 interface SidebarContentProps {
   variant: SidebarVariant;
   brand: string;
+  brandName: string;
+  otherBrands: BrandOption[];
   items: { id: string; n: string; label: string; href: string }[];
   isActive: (href: string) => boolean;
 }
 
-function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps) {
+function SidebarContent({ variant, brand, brandName, otherBrands, items, isActive }: SidebarContentProps) {
   const tCommon = useTranslations('common');
   const tSidebar = useTranslations('sidebar');
+  const router = useRouter();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [dropdownOpen]);
+
+  const hasMultipleBrands = otherBrands.length > 0;
+  const displayName = variant === 'agency' ? tCommon('brandActor') : (brandName || brand);
+
   return (
     <aside className="sidebar" style={{
       width: 256,
@@ -53,19 +76,92 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
       </div>
 
       {/* Tenant block */}
-      <div style={{ padding: '20px 24px 18px', borderBottom: `1px solid ${C.line}` }}>
+      <div ref={dropdownRef} style={{ padding: '20px 24px 18px', borderBottom: `1px solid ${C.line}`, position: 'relative' }}>
         <Eyebrow color={C.muted} style={{ fontSize: 10, marginBottom: 8 }}>
           {variant === 'agency' ? tSidebar('agency') : tSidebar('brand')}
         </Eyebrow>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div
+          onClick={() => { if (hasMultipleBrands) setDropdownOpen(o => !o); }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            cursor: hasMultipleBrands ? 'pointer' : 'default',
+          }}
+        >
           <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            {variant === 'agency' ? tCommon('brandActor') : brand}
+            {displayName}
           </div>
-          <span style={{ color: C.fg3, fontSize: 12 }}>⌄</span>
+          {hasMultipleBrands && (
+            <span style={{
+              color: C.fg3,
+              fontSize: 12,
+              transform: dropdownOpen ? 'rotate(180deg)' : 'none',
+              transition: 'transform 140ms ease',
+              display: 'inline-block',
+            }}>⌄</span>
+          )}
+          {!hasMultipleBrands && (
+            <span style={{ color: C.fg3, fontSize: 12 }}>⌄</span>
+          )}
         </div>
-        {variant === 'client' && (
+        {variant === 'client' && !dropdownOpen && (
           <div style={{ color: C.fg3, fontSize: 11, marginTop: 4, letterSpacing: '0.04em' }}>
             {tCommon('brandActorTagline')}
+          </div>
+        )}
+
+        {/* Brand switcher dropdown */}
+        {dropdownOpen && hasMultipleBrands && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: C.panel,
+            border: `1px solid ${C.lineStrong}`,
+            zIndex: 50,
+            padding: '6px 0',
+          }}>
+            {/* current brand (active) */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              padding: '10px 18px',
+              borderLeft: `2px solid ${C.red}`,
+              background: C.ink,
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.bone }}>{displayName}</span>
+              <span style={{ fontSize: 10, color: C.muted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Actuel</span>
+            </div>
+
+            {otherBrands.map(b => (
+              <button
+                key={b.slug}
+                onClick={() => { setDropdownOpen(false); router.push(`/${b.slug}`); }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  width: '100%',
+                  padding: '10px 18px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderLeft: '2px solid transparent',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontFamily: 'Archivo, sans-serif',
+                  transition: 'background 120ms ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = C.ink; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.bone }}>{b.brandName}</span>
+                <span style={{ fontSize: 10, color: C.fg3, letterSpacing: '0.04em' }}>{b.orgName}</span>
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -133,10 +229,35 @@ function SidebarContent({ variant, brand, items, isActive }: SidebarContentProps
 export default function Sidebar({ variant = 'agency', brand, clientId, hasPublishedVersion }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [allBrands, setAllBrands] = useState<BrandOption[]>([]);
   const tSidebar = useTranslations('sidebar');
   const tCommon = useTranslations('common');
 
   const resolvedBrand = brand ?? 'SARTIGA';
+
+  // Fetch all active brands for the logged-in user (client variant only)
+  useEffect(() => {
+    if (variant !== 'client') return;
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('client_users')
+        .select('clients(slug, brand_name, org_name)')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .then(({ data }) => {
+          const list = (data ?? [])
+            .map(r => {
+              const c = r.clients as unknown as { slug: string; brand_name: string; org_name: string } | null;
+              if (!c) return null;
+              return { slug: c.slug, brandName: c.brand_name, orgName: c.org_name };
+            })
+            .filter((b): b is BrandOption => b !== null);
+          setAllBrands(list);
+        });
+    });
+  }, [variant]);
 
   const agencyItems = (() => {
     const items = [
@@ -217,6 +338,8 @@ export default function Sidebar({ variant = 'agency', brand, clientId, hasPublis
           <SidebarContent
             variant={variant}
             brand={resolvedBrand}
+            brandName={allBrands.find(b => b.slug === resolvedBrand)?.brandName ?? resolvedBrand}
+            otherBrands={allBrands.filter(b => b.slug !== resolvedBrand)}
             items={items}
             isActive={isActive}
           />

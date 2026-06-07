@@ -37,6 +37,25 @@ export async function inviteUser(
 
   const brandRole = role === 'client_admin' ? 'client_admin' : 'client_reader';
   const clientRole = role === 'client_admin' ? 'admin' : 'reader';
+
+  // Check if a user with this email already exists
+  const { data: existingUsers } = await admin.auth.admin.listUsers();
+  const existingUser = existingUsers?.users.find(u => u.email === email);
+
+  if (existingUser) {
+    // User already has credentials — just add the client_users row
+    const { error: cuError } = await admin
+      .from('client_users')
+      .upsert(
+        { client_id: clientId, user_id: existingUser.id, role: clientRole, status: 'active' },
+        { onConflict: 'client_id,user_id' },
+      );
+
+    if (cuError) return { success: false, error: t('accessCreate') };
+    return { success: true };
+  }
+
+  // New user — send invite email and create profile + client_users row
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/set-password`;
 
   const { data, error: inviteError } = await admin.auth.admin.generateLink({
@@ -46,9 +65,6 @@ export async function inviteUser(
   });
 
   if (inviteError) {
-    if (inviteError.message.includes('already registered')) {
-      return { success: false, error: t('emailExists') };
-    }
     return { success: false, error: t('inviteFailed') };
   }
 
