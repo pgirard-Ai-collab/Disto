@@ -8,20 +8,27 @@ import LanguageToggleAuth from '@/components/i18n/LanguageToggleAuth';
 import { useState, useEffect, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/browser';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { validatePassword } from '@/lib/auth/validate-password';
+import { logout } from '@/app/actions/logout';
 
 export default function SetPasswordPage() {
   const t = useTranslations('auth.setPassword');
   const tPw = useTranslations('auth.password.errors');
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  // /auth/confirm redirige ici avec ?error=invalid|expired si verifyOtp a échoué.
+  const linkError = searchParams.get('error');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    linkError === 'expired' ? t('errors.expired') : linkError ? t('errors.invalid') : null,
+  );
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
+    if (linkError) return;
+
     const supabase = createClient();
     let invalidTimer: ReturnType<typeof setTimeout>;
 
@@ -50,7 +57,7 @@ export default function SetPasswordPage() {
       clearTimeout(invalidTimer);
       subscription.unsubscribe();
     };
-  }, [t]);
+  }, [t, linkError]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -71,34 +78,21 @@ export default function SetPasswordPage() {
       return;
     }
 
+    // Active les accès marque de l'invité (passe les client_users en 'active').
+    // Nécessite la session ouverte par verifyOtp — à faire avant signOut.
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .single();
 
-    if (profile?.role === 'agency_admin') {
-      router.push('/clients');
-      return;
+    if (profile?.role !== 'agency_admin') {
+      await supabase.rpc('activate_my_client_access');
     }
 
-    await supabase.rpc('activate_my_client_access');
-
-    const { data: brandRows } = await supabase
-      .from('client_users')
-      .select('clients(slug)')
-      .eq('status', 'active');
-
-    const slugs = (brandRows ?? [])
-      .map(r => (r.clients as unknown as { slug: string } | null)?.slug)
-      .filter((s): s is string => !!s);
-
-    if (slugs.length === 1) {
-      router.push(`/${slugs[0]}`);
-    } else if (slugs.length > 1) {
-      router.push('/select-brand');
-    } else {
-      router.push('/login');
-    }
+    // Déconnexion server-side (action atomique signOut + redirect vers /login) :
+    // évite la course entre signOut client et le proxy, qui sinon redirige vers
+    // le portail de la marque avant que les cookies soient effacés.
+    await logout();
   }
 
   return (

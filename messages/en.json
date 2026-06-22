@@ -27,6 +27,7 @@
       "resendFailed": "Could not resend the invitation. Please try again.",
       "disableAccess": "Could not disable access. Please try again.",
       "disableAccount": "Could not disable this account. Please try again.",
+      "deleteUserFailed": "Could not delete this user. Please try again.",
       "unarchiveFailed": "Could not reactivate this client.",
       "archiveFailed": "Could not archive this client.",
       "deleteFailed": "Could not delete this client.",
@@ -97,7 +98,8 @@
         "invalidCredentials": "Incorrect email or password.",
         "disabled": "This account has been disabled. Contact your administrator.",
         "generic": "An error occurred. Please try again.",
-        "noPortal": "No portal is associated with this account. Contact your administrator."
+        "noPortal": "No portal is associated with this account. Contact your administrator.",
+        "noProfile": "This account is not configured yet. Contact your administrator."
       }
     },
     "forgot": {
@@ -154,6 +156,7 @@
       "submit": "Update  →",
       "errors": {
         "invalid": "Invalid or expired link. Please start over from \"Forgot password\".",
+        "expired": "Link expired. Please start over from \"Forgot password\".",
         "generic": "Couldn't update the password. Please try again."
       }
     }
@@ -430,7 +433,12 @@
       "disabledTag": "Disabled",
       "sentTag": "Sent ✓",
       "resend": "Resend",
-      "disable": "Disable"
+      "disable": "Disable",
+      "deleteTitle": "Delete user",
+      "deleteBody": "Permanently delete <strong>{userName}</strong>? This action is irreversible and cannot be undone.",
+      "deleteConfirm": "Delete",
+      "delete": "Delete",
+      "deletedTag": "Deleted"
     },
     "systemPrompt": {
       "title": "System Prompt",

@@ -6,6 +6,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
 import { inviteEmailHtml, inviteSubject } from '@/lib/email/templates/invite';
 import { resetPasswordEmailHtml, resetPasswordSubject } from '@/lib/email/templates/reset-password';
+import { buildConfirmLink } from '@/lib/auth/confirm-link';
 
 export type ResendInviteResult =
   | { success: true }
@@ -48,8 +49,8 @@ export async function resendInvite(
     options: { redirectTo },
   });
 
-  if (!inviteError && inviteData) {
-    const actionLink = inviteData.properties.action_link;
+  if (!inviteError && inviteData?.properties?.hashed_token) {
+    const actionLink = buildConfirmLink(inviteData.properties.hashed_token, 'invite', '/set-password');
     await sendEmail({
       to: targetUser.email,
       subject: inviteSubject,
@@ -68,11 +69,11 @@ export async function resendInvite(
       options: { redirectTo },
     });
 
-    if (resetError || !resetData) {
+    if (resetError || !resetData?.properties?.hashed_token) {
       return { success: false, error: t('resendFailed') };
     }
 
-    const actionLink = resetData.properties.action_link;
+    const actionLink = buildConfirmLink(resetData.properties.hashed_token, 'recovery', '/update-password');
     await sendEmail({
       to: targetUser.email,
       subject: resetPasswordSubject,

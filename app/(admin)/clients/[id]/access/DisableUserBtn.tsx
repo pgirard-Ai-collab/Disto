@@ -4,6 +4,7 @@ import { C } from '@/lib/disto';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { disableUser } from '@/app/actions/disable-user';
+import { deleteUser } from '@/app/actions/delete-user';
 import { resendInvite } from '@/app/actions/resend-invite';
 
 type Props = {
@@ -19,8 +20,11 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
   const [localStatus, setLocalStatus] = useState(status);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingResend, setLoadingResend] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [showResendModal, setShowResendModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const [resendDone, setResendDone] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -47,6 +51,19 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
       setErrorMsg(result.error);
     }
     setLoadingResend(false);
+  }
+
+  async function handleDeleteConfirm() {
+    setShowDeleteModal(false);
+    setErrorMsg(null);
+    setLoadingDelete(true);
+    const result = await deleteUser(clientUserId, userId);
+    if (result.success) {
+      setDeleted(true);
+    } else {
+      setErrorMsg(result.error);
+      setLoadingDelete(false);
+    }
   }
 
   const btnStyle = (color: string, loading: boolean) => ({
@@ -131,10 +148,38 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
         </div>
       )}
 
+      {/* Delete confirm modal */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
+        }}>
+          <div style={{ background: C.ink, border: `1px solid ${C.line}`, padding: '32px 40px', maxWidth: 400, width: '100%' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.red, marginBottom: 12 }}>
+              {t('deleteTitle')}
+            </div>
+            <div style={{ fontSize: 14, color: C.bone, lineHeight: 1.55, marginBottom: 28 }}>
+              {t.rich('deleteBody', {
+                userName,
+                strong: (chunks) => <strong style={{ color: C.bone }}>{chunks}</strong>,
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={handleDeleteConfirm} style={{ background: C.red, border: 'none', color: C.bone, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
+                {t('deleteConfirm')}
+              </button>
+              <button onClick={() => setShowDeleteModal(false)} style={{ background: 'none', border: `1px solid ${C.line}`, color: C.bone, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'Archivo, sans-serif' }}>
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action buttons */}
-      {localStatus === 'disabled' ? (
+      {deleted ? (
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>
-          {t('disabledTag')}
+          {t('deletedTag')}
         </span>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
@@ -153,12 +198,25 @@ export default function DisableUserBtn({ clientUserId, userId, userName, status,
               </button>
             )
           )}
+          {localStatus === 'disabled' ? (
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>
+              {t('disabledTag')}
+            </span>
+          ) : (
+            <button
+              onClick={() => setShowDisableModal(true)}
+              disabled={loadingDisable}
+              style={btnStyle(C.red, loadingDisable)}
+            >
+              {loadingDisable ? '…' : t('disable')}
+            </button>
+          )}
           <button
-            onClick={() => setShowDisableModal(true)}
-            disabled={loadingDisable}
-            style={btnStyle(C.red, loadingDisable)}
+            onClick={() => setShowDeleteModal(true)}
+            disabled={loadingDelete}
+            style={btnStyle(C.red, loadingDelete)}
           >
-            {loadingDisable ? '…' : t('disable')}
+            {loadingDelete ? '…' : t('delete')}
           </button>
         </div>
       )}

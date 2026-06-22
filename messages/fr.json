@@ -27,6 +27,7 @@
       "resendFailed": "Impossible de renvoyer l'invitation. Veuillez réessayer.",
       "disableAccess": "Impossible de désactiver l'accès. Veuillez réessayer.",
       "disableAccount": "Impossible de désactiver ce compte. Veuillez réessayer.",
+      "deleteUserFailed": "Impossible de supprimer cet utilisateur. Veuillez réessayer.",
       "unarchiveFailed": "Impossible de réactiver ce client.",
       "archiveFailed": "Impossible d'archiver ce client.",
       "deleteFailed": "Impossible de supprimer ce client.",
@@ -97,7 +98,8 @@
         "invalidCredentials": "Courriel ou mot de passe incorrect.",
         "disabled": "Ce compte a été désactivé. Contactez votre administrateur.",
         "generic": "Une erreur est survenue. Veuillez réessayer.",
-        "noPortal": "Aucun portail associé à ce compte. Contactez votre administrateur."
+        "noPortal": "Aucun portail associé à ce compte. Contactez votre administrateur.",
+        "noProfile": "Ce compte n'est pas encore configuré. Contactez votre administrateur."
       }
     },
     "forgot": {
@@ -154,6 +156,7 @@
       "submit": "Mettre à jour  →",
       "errors": {
         "invalid": "Lien invalide ou expiré. Veuillez recommencer depuis « Mot de passe oublié ».",
+        "expired": "Lien expiré. Veuillez recommencer depuis « Mot de passe oublié ».",
         "generic": "Impossible de mettre à jour le mot de passe. Veuillez réessayer."
       }
     }
@@ -430,7 +433,12 @@
       "disabledTag": "Désactivé",
       "sentTag": "Envoyé ✓",
       "resend": "Renvoyer",
-      "disable": "Désactiver"
+      "disable": "Désactiver",
+      "deleteTitle": "Supprimer l'utilisateur",
+      "deleteBody": "Supprimer définitivement <strong>{userName}</strong> ? Cette action est irréversible et ne peut pas être annulée.",
+      "deleteConfirm": "Supprimer",
+      "delete": "Supprimer",
+      "deletedTag": "Supprimé"
     },
     "systemPrompt": {
       "title": "System Prompt",

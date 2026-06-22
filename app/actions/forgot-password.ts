@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
 import { resetPasswordEmailHtml, resetPasswordSubject } from '@/lib/email/templates/reset-password';
+import { buildConfirmLink } from '@/lib/auth/confirm-link';
 
 export async function forgotPassword(email: string): Promise<{ success: true }> {
   const admin = await createAdminClient();
@@ -14,8 +15,8 @@ export async function forgotPassword(email: string): Promise<{ success: true }> 
     options: { redirectTo },
   });
 
-  if (!error && data?.properties?.action_link) {
-    const actionLink = data.properties.action_link;
+  if (!error && data?.properties?.hashed_token) {
+    const actionLink = buildConfirmLink(data.properties.hashed_token, 'recovery', '/update-password');
     await sendEmail({
       to: email,
       subject: resetPasswordSubject,

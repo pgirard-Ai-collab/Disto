@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
 import { inviteEmailHtml, inviteSubject } from '@/lib/email/templates/invite';
+import { buildConfirmLink } from '@/lib/auth/confirm-link';
 
 export type InviteUserResult =
   | { success: true }
@@ -64,11 +65,11 @@ export async function inviteUser(
     options: { redirectTo },
   });
 
-  if (inviteError) {
+  if (inviteError || !data.properties?.hashed_token) {
     return { success: false, error: t('inviteFailed') };
   }
 
-  const actionLink = data.properties.action_link;
+  const actionLink = buildConfirmLink(data.properties.hashed_token, 'invite', '/set-password');
   await sendEmail({
     to: email,
     subject: inviteSubject,

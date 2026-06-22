@@ -29,7 +29,9 @@ export async function proxy(req: NextRequest) {
   // session", so treat it as logged-out rather than letting it bubble up.
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  const publicPaths = ['/login', '/forgot-password', '/set-password', '/update-password'];
+  // /auth/confirm doit rester accessible sans session : c'est précisément lui qui
+  // vérifie le token de récupération/invitation et établit la session.
+  const publicPaths = ['/login', '/forgot-password', '/set-password', '/update-password', '/auth/confirm'];
   const isAuthRoute = pathname.startsWith('/login');
   const isPublicRoute = publicPaths.some(p => pathname.startsWith(p));
   const isAdminRoute = pathname.startsWith('/clients');

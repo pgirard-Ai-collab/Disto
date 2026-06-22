@@ -8,20 +8,27 @@ import LanguageToggleAuth from '@/components/i18n/LanguageToggleAuth';
 import { useState, useEffect, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/browser';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { validatePassword } from '@/lib/auth/validate-password';
+import { logout } from '@/app/actions/logout';
 
 export default function UpdatePasswordPage() {
   const t = useTranslations('auth.updatePassword');
   const tPw = useTranslations('auth.password.errors');
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  // /auth/confirm redirige ici avec ?error=invalid|expired si verifyOtp a échoué.
+  const linkError = searchParams.get('error');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    linkError === 'expired' ? t('errors.expired') : linkError ? t('errors.invalid') : null,
+  );
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
+    if (linkError) return;
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
@@ -30,7 +37,7 @@ export default function UpdatePasswordPage() {
         setError(t('errors.invalid'));
       }
     });
-  }, [t]);
+  }, [t, linkError]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -51,7 +58,10 @@ export default function UpdatePasswordPage() {
       return;
     }
 
-    router.push('/login');
+    // verifyOtp a ouvert une session : on la ferme pour forcer une reconnexion
+    // avec le nouveau mot de passe. Déconnexion server-side (action atomique
+    // signOut + redirect) pour éviter la course avec le proxy.
+    await logout();
   }
 
   return (

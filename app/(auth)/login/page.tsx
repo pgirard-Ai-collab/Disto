@@ -58,6 +58,14 @@ export default function LoginPage() {
       return;
     }
 
+    // No profile row at all → account not provisioned (distinct from a client
+    // with zero active brands, which falls through to the noPortal case below).
+    if (!profile) {
+      setError(t('errors.noProfile'));
+      setLoading(false);
+      return;
+    }
+
     const { data: brandRows } = await supabase
       .from('client_users')
       .select('clients(slug)')
